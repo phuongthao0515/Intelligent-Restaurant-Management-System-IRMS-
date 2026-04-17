@@ -1,0 +1,718 @@
+openapi: 3.1.0
+info:
+  title: IRMS API
+  version: 0.1.0
+  description: |
+    Intelligent Restaurant Management System — REST API contract stub.
+    Covers two modules: Digital Ordering & Menu Management, Kitchen Display System (KDS).
+    Auth is intentionally out of scope; a `X-Staff-Id` header is used for audit fields.
+
+servers:
+  - url: http://localhost:8000/api/v1
+
+tags:
+  - name: menu
+    description: Menu categories and items (Module A)
+  - name: orders
+    description: Order lifecycle (Module A)
+  - name: tables
+    description: Tables (shared reference data)
+  - name: kds
+    description: Kitchen Display System (Module B)
+
+# ---------------------------------------------------------------------------
+# PATHS
+# ---------------------------------------------------------------------------
+paths:
+
+  # -------------------- MENU CATEGORIES --------------------
+  /menu/categories:
+    get:
+      tags: [menu]
+      summary: List menu categories
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/MenuCategory' }
+    post:
+      tags: [menu]
+      summary: Create a menu category
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MenuCategoryCreate' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MenuCategory' }
+
+  /menu/categories/{category_id}:
+    parameters:
+      - $ref: '#/components/parameters/CategoryId'
+    patch:
+      tags: [menu]
+      summary: Update a menu category
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MenuCategoryUpdate' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MenuCategory' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # -------------------- MENU ITEMS --------------------
+  /menu/items:
+    get:
+      tags: [menu]
+      summary: List menu items
+      parameters:
+        - in: query
+          name: category_id
+          schema: { type: integer }
+        - in: query
+          name: is_available
+          schema: { type: boolean }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/MenuItem' }
+    post:
+      tags: [menu]
+      summary: Create a menu item
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MenuItemCreate' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MenuItem' }
+
+  /menu/items/{item_id}:
+    parameters:
+      - $ref: '#/components/parameters/ItemId'
+    get:
+      tags: [menu]
+      summary: Get a menu item
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MenuItem' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      tags: [menu]
+      summary: Update a menu item
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MenuItemUpdate' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MenuItem' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /menu/items/{item_id}/availability:
+    parameters:
+      - $ref: '#/components/parameters/ItemId'
+    patch:
+      tags: [menu]
+      summary: Toggle item availability
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [is_available]
+              properties:
+                is_available: { type: boolean }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MenuItem' }
+
+  # -------------------- TABLES --------------------
+  /tables:
+    get:
+      tags: [tables]
+      summary: List tables
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Table' }
+
+  /tables/{table_id}:
+    parameters:
+      - in: path
+        name: table_id
+        required: true
+        schema: { type: integer }
+    get:
+      tags: [tables]
+      summary: Get a table
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Table' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # -------------------- ORDERS --------------------
+  /orders:
+    get:
+      tags: [orders]
+      summary: List orders
+      parameters:
+        - in: query
+          name: table_id
+          schema: { type: integer }
+        - in: query
+          name: status
+          schema: { $ref: '#/components/schemas/OrderStatus' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Order' }
+    post:
+      tags: [orders]
+      summary: Create a draft order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OrderCreate' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Order' }
+
+  /orders/{order_id}:
+    parameters:
+      - $ref: '#/components/parameters/OrderId'
+    get:
+      tags: [orders]
+      summary: Get an order
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Order' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /orders/{order_id}/items:
+    parameters:
+      - $ref: '#/components/parameters/OrderId'
+    post:
+      tags: [orders]
+      summary: Add an item to a draft order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OrderItemCreate' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OrderItem' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /orders/{order_id}/items/{item_id}:
+    parameters:
+      - $ref: '#/components/parameters/OrderId'
+      - $ref: '#/components/parameters/ItemId'
+    patch:
+      tags: [orders]
+      summary: Update an order item (qty, customizations, notes)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OrderItemUpdate' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OrderItem' }
+        '409': { $ref: '#/components/responses/Conflict' }
+    delete:
+      tags: [orders]
+      summary: Remove an order item (draft only)
+      responses:
+        '204': { description: Deleted }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /orders/{order_id}/submit:
+    parameters:
+      - $ref: '#/components/parameters/OrderId'
+    post:
+      tags: [orders]
+      summary: Submit order to kitchen (DRAFT -> PLACED)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Order' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /orders/{order_id}/cancel:
+    parameters:
+      - $ref: '#/components/parameters/OrderId'
+    post:
+      tags: [orders]
+      summary: Cancel an order
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Order' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /orders/{order_id}/close:
+    parameters:
+      - $ref: '#/components/parameters/OrderId'
+    post:
+      tags: [orders]
+      summary: Close a served order
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Order' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  # -------------------- KDS --------------------
+  /kds/stations:
+    get:
+      tags: [kds]
+      summary: List stations
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Station' }
+    post:
+      tags: [kds]
+      summary: Create a station
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/StationCreate' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Station' }
+
+  /kds/stations/{station_id}/tickets:
+    parameters:
+      - in: path
+        name: station_id
+        required: true
+        schema: { type: integer }
+    get:
+      tags: [kds]
+      summary: List active tickets for a station
+      parameters:
+        - in: query
+          name: status
+          description: Filter by item status; default returns ACTIVE (QUEUED+PREPARING)
+          schema:
+            type: string
+            enum: [ACTIVE, QUEUED, PREPARING, READY, SERVED, VOIDED]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/KitchenTicket' }
+
+  /kds/order-items/{order_item_id}/status:
+    parameters:
+      - in: path
+        name: order_item_id
+        required: true
+        schema: { type: integer }
+    patch:
+      tags: [kds]
+      summary: Transition an order item's status
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [new_status]
+              properties:
+                new_status: { $ref: '#/components/schemas/ItemStatus' }
+                reason: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OrderItem' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /kds/order-items/{order_item_id}/bump:
+    parameters:
+      - in: path
+        name: order_item_id
+        required: true
+        schema: { type: integer }
+    post:
+      tags: [kds]
+      summary: Shortcut — mark an item READY
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OrderItem' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /kds/orders/{order_id}/recall:
+    parameters:
+      - $ref: '#/components/parameters/OrderId'
+    post:
+      tags: [kds]
+      summary: Recall a served order back to the kitchen
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Order' }
+
+  /kds/events:
+    get:
+      tags: [kds]
+      summary: Audit trail of order events
+      parameters:
+        - in: query
+          name: order_id
+          schema: { type: integer }
+        - in: query
+          name: since
+          schema: { type: string, format: date-time }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/OrderEvent' }
+
+# ---------------------------------------------------------------------------
+# COMPONENTS
+# ---------------------------------------------------------------------------
+components:
+
+  parameters:
+    OrderId:
+      in: path
+      name: order_id
+      required: true
+      schema: { type: integer }
+    ItemId:
+      in: path
+      name: item_id
+      required: true
+      schema: { type: integer }
+    CategoryId:
+      in: path
+      name: category_id
+      required: true
+      schema: { type: integer }
+
+  responses:
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Conflict:
+      description: Illegal state transition or business-rule violation
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+
+  schemas:
+
+    # ---------- Enums ----------
+    OrderStatus:
+      type: string
+      enum: [DRAFT, PLACED, IN_KITCHEN, READY, SERVED, CLOSED, CANCELLED]
+
+    OrderType:
+      type: string
+      enum: [DINE_IN, TAKEAWAY]
+
+    ItemStatus:
+      type: string
+      enum: [QUEUED, PREPARING, READY, SERVED, VOIDED]
+
+    EventType:
+      type: string
+      enum: [PLACED, ROUTED, STATUS_CHANGED, RECALLED, CANCELLED]
+
+    # ---------- Shared ----------
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code: { type: string }
+        message: { type: string }
+        details: { type: object, additionalProperties: true }
+
+    Money:
+      type: string
+      description: Decimal string with 2 fractional digits (e.g. "12.50")
+
+    Customizations:
+      type: object
+      additionalProperties: true
+      description: Free-form JSON validated against MenuItem.customization_schema
+
+    # ---------- Menu ----------
+    MenuCategory:
+      type: object
+      required: [id, name, display_order]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        display_order: { type: integer }
+
+    MenuCategoryCreate:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string }
+        display_order: { type: integer }
+
+    MenuCategoryUpdate:
+      type: object
+      properties:
+        name: { type: string }
+        display_order: { type: integer }
+
+    MenuItem:
+      type: object
+      required: [id, name, price, category_id, station_id, is_available]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        description: { type: string }
+        price: { $ref: '#/components/schemas/Money' }
+        category_id: { type: integer }
+        station_id: { type: integer }
+        prep_time_min: { type: integer }
+        is_available: { type: boolean }
+        customization_schema:
+          type: object
+          description: JSON Schema describing allowed customizations
+          additionalProperties: true
+
+    MenuItemCreate:
+      type: object
+      required: [name, price, category_id, station_id]
+      properties:
+        name: { type: string }
+        description: { type: string }
+        price: { $ref: '#/components/schemas/Money' }
+        category_id: { type: integer }
+        station_id: { type: integer }
+        prep_time_min: { type: integer }
+        is_available: { type: boolean }
+        customization_schema: { type: object, additionalProperties: true }
+
+    MenuItemUpdate:
+      type: object
+      properties:
+        name: { type: string }
+        description: { type: string }
+        price: { $ref: '#/components/schemas/Money' }
+        category_id: { type: integer }
+        station_id: { type: integer }
+        prep_time_min: { type: integer }
+        customization_schema: { type: object, additionalProperties: true }
+
+    # ---------- Tables ----------
+    Table:
+      type: object
+      required: [id, number, seats]
+      properties:
+        id: { type: integer }
+        number: { type: integer }
+        seats: { type: integer }
+        is_occupied: { type: boolean }
+
+    # ---------- Orders ----------
+    Order:
+      type: object
+      required: [id, table_id, type, status, items, created_at]
+      properties:
+        id: { type: integer }
+        table_id: { type: integer }
+        customer_id: { type: integer, nullable: true }
+        type: { $ref: '#/components/schemas/OrderType' }
+        status: { $ref: '#/components/schemas/OrderStatus' }
+        subtotal: { $ref: '#/components/schemas/Money' }
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/OrderItem' }
+        created_at: { type: string, format: date-time }
+        placed_at: { type: string, format: date-time, nullable: true }
+        ready_at: { type: string, format: date-time, nullable: true }
+        served_at: { type: string, format: date-time, nullable: true }
+
+    OrderCreate:
+      type: object
+      required: [table_id, type]
+      properties:
+        table_id: { type: integer }
+        customer_id: { type: integer }
+        type: { $ref: '#/components/schemas/OrderType' }
+
+    OrderItem:
+      type: object
+      required: [id, order_id, menu_item_id, qty, unit_price, status, station_id]
+      properties:
+        id: { type: integer }
+        order_id: { type: integer }
+        menu_item_id: { type: integer }
+        qty: { type: integer }
+        unit_price: { $ref: '#/components/schemas/Money' }
+        status: { $ref: '#/components/schemas/ItemStatus' }
+        station_id: { type: integer }
+        customizations: { $ref: '#/components/schemas/Customizations' }
+        allergy_notes: { type: string }
+        started_at: { type: string, format: date-time, nullable: true }
+        ready_at: { type: string, format: date-time, nullable: true }
+
+    OrderItemCreate:
+      type: object
+      required: [menu_item_id, qty]
+      properties:
+        menu_item_id: { type: integer }
+        qty: { type: integer }
+        customizations: { $ref: '#/components/schemas/Customizations' }
+        allergy_notes: { type: string }
+
+    OrderItemUpdate:
+      type: object
+      properties:
+        qty: { type: integer }
+        customizations: { $ref: '#/components/schemas/Customizations' }
+        allergy_notes: { type: string }
+
+    # ---------- KDS ----------
+    Station:
+      type: object
+      required: [id, name, is_active]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        is_active: { type: boolean }
+
+    StationCreate:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string }
+        is_active: { type: boolean }
+
+    KitchenTicket:
+      type: object
+      description: |
+        A UI grouping of ORDER_ITEM rows by (order_id, station_id).
+        Not a DB table — assembled server-side for the KDS screen.
+      required: [order_id, station_id, table_number, items, placed_at]
+      properties:
+        order_id: { type: integer }
+        station_id: { type: integer }
+        table_number: { type: integer }
+        placed_at: { type: string, format: date-time }
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/OrderItem' }
+
+    OrderEvent:
+      type: object
+      required: [id, order_id, event_type, created_at]
+      properties:
+        id: { type: integer }
+        order_id: { type: integer }
+        order_item_id: { type: integer, nullable: true }
+        event_type: { $ref: '#/components/schemas/EventType' }
+        actor_id: { type: integer, nullable: true }
+        payload: { type: object, additionalProperties: true }
+        created_at: { type: string, format: date-time }
