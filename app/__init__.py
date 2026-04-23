@@ -1,1 +1,0 @@
-"""IRMS backend application package."""
