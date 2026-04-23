@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from uuid import UUID
+
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 from app.shared.models import WsEnvelope
@@ -10,7 +12,7 @@ router = APIRouter()
 
 
 @router.websocket("/ws/kds/station/{station_id}")
-async def kds_station_socket(websocket: WebSocket, station_id: int) -> None:
+async def kds_station_socket(websocket: WebSocket, station_id: UUID) -> None:
     await store.connections.connect_station(station_id, websocket)
     try:
         while True:
@@ -22,7 +24,7 @@ async def kds_station_socket(websocket: WebSocket, station_id: int) -> None:
 
 
 @router.websocket("/ws/orders/{order_id}")
-async def order_socket(websocket: WebSocket, order_id: int) -> None:
+async def order_socket(websocket: WebSocket, order_id: UUID) -> None:
     await store.connections.connect_order(order_id, websocket)
     try:
         while True:

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import uuid
 from decimal import Decimal
+from uuid import UUID
 
 from fastapi import HTTPException, status
 
@@ -32,14 +34,14 @@ class OrderingService:
 
     def create_category(self, payload: MenuCategoryCreate) -> MenuCategory:
         category = MenuCategory(
-            id=store.next_category_id(),
+            id=uuid.uuid4(),
             name=payload.name,
             display_order=payload.display_order,
         )
         store.categories[category.id] = category
         return category
 
-    def update_category(self, category_id: int, payload: MenuCategoryUpdate) -> MenuCategory:
+    def update_category(self, category_id: UUID, payload: MenuCategoryUpdate) -> MenuCategory:
         category = store.categories.get(category_id)
         if category is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Category not found")
@@ -48,7 +50,7 @@ class OrderingService:
         return updated
 
     def list_menu_items(
-        self, category_id: int | None = None, is_available: bool | None = None
+        self, category_id: UUID | None = None, is_available: bool | None = None
     ) -> list[MenuItem]:
         items = list(store.menu_items.values())
         if category_id is not None:
@@ -58,24 +60,24 @@ class OrderingService:
         return items
 
     def create_menu_item(self, payload: MenuItemCreate) -> MenuItem:
-        item = MenuItem(id=store.next_menu_item_id(), **payload.model_dump())
+        item = MenuItem(id=uuid.uuid4(), **payload.model_dump())
         store.menu_items[item.id] = item
         return item
 
-    def get_menu_item(self, item_id: int) -> MenuItem:
+    def get_menu_item(self, item_id: UUID) -> MenuItem:
         item = store.menu_items.get(item_id)
         if item is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Menu item not found")
         return item
 
-    def update_menu_item(self, item_id: int, payload: MenuItemUpdate) -> MenuItem:
+    def update_menu_item(self, item_id: UUID, payload: MenuItemUpdate) -> MenuItem:
         item = self.get_menu_item(item_id)
         updated = item.model_copy(update=payload.model_dump(exclude_none=True))
         store.menu_items[item_id] = updated
         return updated
 
     def update_item_availability(
-        self, item_id: int, payload: ItemAvailabilityUpdate
+        self, item_id: UUID, payload: ItemAvailabilityUpdate
     ) -> MenuItem:
         item = self.get_menu_item(item_id)
         updated = item.model_copy(update={"is_available": payload.is_available})
@@ -85,14 +87,14 @@ class OrderingService:
     def list_tables(self) -> list[Table]:
         return list(store.tables.values())
 
-    def get_table(self, table_id: int) -> Table:
+    def get_table(self, table_id: UUID) -> Table:
         table = store.tables.get(table_id)
         if table is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Table not found")
         return table
 
     def list_orders(
-        self, table_id: int | None = None, status_filter: OrderStatus | None = None
+        self, table_id: UUID | None = None, status_filter: OrderStatus | None = None
     ) -> list[Order]:
         orders = list(store.orders.values())
         if table_id is not None:
@@ -104,7 +106,7 @@ class OrderingService:
     def create_order(self, payload: OrderCreate) -> Order:
         self.get_table(payload.table_id)
         order = Order(
-            id=store.next_order_id(),
+            id=uuid.uuid4(),
             table_id=payload.table_id,
             customer_id=payload.customer_id,
             type=payload.type,
@@ -114,13 +116,13 @@ class OrderingService:
         store.orders[order.id] = order
         return order
 
-    def get_order(self, order_id: int) -> Order:
+    def get_order(self, order_id: UUID) -> Order:
         order = store.orders.get(order_id)
         if order is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Order not found")
         return order
 
-    def add_order_item(self, order_id: int, payload: OrderItemCreate) -> OrderItem:
+    def add_order_item(self, order_id: UUID, payload: OrderItemCreate) -> OrderItem:
         order = self.get_order(order_id)
         if order.status != OrderStatus.DRAFT:
             raise HTTPException(status.HTTP_409_CONFLICT, "Only draft orders are editable")
@@ -129,7 +131,7 @@ class OrderingService:
         if not menu_item.is_available:
             raise HTTPException(status.HTTP_409_CONFLICT, "Menu item is unavailable")
         item = OrderItem(
-            id=store.next_order_item_id(),
+            id=uuid.uuid4(),
             order_id=order_id,
             menu_item_id=menu_item.id,
             qty=payload.qty,
@@ -149,7 +151,7 @@ class OrderingService:
         return item
 
     def update_order_item(
-        self, order_id: int, item_id: int, payload: OrderItemUpdate
+        self, order_id: UUID, item_id: UUID, payload: OrderItemUpdate
     ) -> OrderItem:
         order = self.get_order(order_id)
         if order.status != OrderStatus.DRAFT:
@@ -170,7 +172,7 @@ class OrderingService:
                 return updated_item
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Order item not found")
 
-    def remove_order_item(self, order_id: int, item_id: int) -> None:
+    def remove_order_item(self, order_id: UUID, item_id: UUID) -> None:
         order = self.get_order(order_id)
         if order.status != OrderStatus.DRAFT:
             raise HTTPException(status.HTTP_409_CONFLICT, "Only draft orders are editable")
@@ -180,7 +182,7 @@ class OrderingService:
         subtotal = sum((item.unit_price * item.qty for item in items), start=Decimal("0.00"))
         store.orders[order_id] = order.model_copy(update={"items": items, "subtotal": subtotal})
 
-    def submit_order(self, order_id: int) -> Order:
+    def submit_order(self, order_id: UUID) -> Order:
         order = self.get_order(order_id)
         if order.status != OrderStatus.DRAFT:
             raise HTTPException(status.HTTP_409_CONFLICT, "Only draft orders can be submitted")
@@ -194,7 +196,7 @@ class OrderingService:
         store.add_event(order_id, EventType.PLACED, payload={"status": updated.status.value})
         return updated
 
-    def cancel_order(self, order_id: int, reason: str | None = None) -> Order:
+    def cancel_order(self, order_id: UUID, reason: str | None = None) -> Order:
         order = self.get_order(order_id)
         if order.status in {OrderStatus.CLOSED, OrderStatus.CANCELLED}:
             raise HTTPException(status.HTTP_409_CONFLICT, "Order already finished")
@@ -203,7 +205,7 @@ class OrderingService:
         store.add_event(order_id, EventType.CANCELLED, payload={"reason": reason})
         return updated
 
-    def close_order(self, order_id: int) -> Order:
+    def close_order(self, order_id: UUID) -> Order:
         order = self.get_order(order_id)
         if order.status not in {OrderStatus.SERVED, OrderStatus.READY}:
             raise HTTPException(

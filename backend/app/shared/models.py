@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
 from typing import Any
+from uuid import UUID
 
 from pydantic import BaseModel, Field
 
@@ -54,7 +55,7 @@ class ErrorResponse(BaseModel):
 
 
 class MenuCategory(BaseModel):
-    id: int
+    id: UUID
     name: str
     display_order: int = 0
 
@@ -70,12 +71,12 @@ class MenuCategoryUpdate(BaseModel):
 
 
 class MenuItem(BaseModel):
-    id: int
+    id: UUID
     name: str
     description: str | None = None
     price: Money
-    category_id: int
-    station_id: int
+    category_id: UUID
+    station_id: UUID
     prep_time_min: int | None = None
     is_available: bool = True
     customization_schema: dict[str, Any] = Field(default_factory=dict)
@@ -85,8 +86,8 @@ class MenuItemCreate(BaseModel):
     name: str
     description: str | None = None
     price: Money
-    category_id: int
-    station_id: int
+    category_id: UUID
+    station_id: UUID
     prep_time_min: int | None = None
     is_available: bool = True
     customization_schema: dict[str, Any] = Field(default_factory=dict)
@@ -96,27 +97,27 @@ class MenuItemUpdate(BaseModel):
     name: str | None = None
     description: str | None = None
     price: Money | None = None
-    category_id: int | None = None
-    station_id: int | None = None
+    category_id: UUID | None = None
+    station_id: UUID | None = None
     prep_time_min: int | None = None
     customization_schema: dict[str, Any] | None = None
 
 
 class Table(BaseModel):
-    id: int
+    id: UUID
     number: int
     seats: int
     is_occupied: bool = False
 
 
 class OrderItem(BaseModel):
-    id: int
-    order_id: int
-    menu_item_id: int
+    id: UUID
+    order_id: UUID
+    menu_item_id: UUID
     qty: int
     unit_price: Money
     status: ItemStatus
-    station_id: int
+    station_id: UUID
     customizations: Customizations = Field(default_factory=dict)
     allergy_notes: str | None = None
     started_at: datetime | None = None
@@ -124,7 +125,7 @@ class OrderItem(BaseModel):
 
 
 class OrderItemCreate(BaseModel):
-    menu_item_id: int
+    menu_item_id: UUID
     qty: int
     customizations: Customizations = Field(default_factory=dict)
     allergy_notes: str | None = None
@@ -137,9 +138,9 @@ class OrderItemUpdate(BaseModel):
 
 
 class Order(BaseModel):
-    id: int
-    table_id: int
-    customer_id: int | None = None
+    id: UUID
+    table_id: UUID
+    customer_id: UUID | None = None
     type: OrderType
     status: OrderStatus
     subtotal: Money = Decimal("0.00")
@@ -151,13 +152,13 @@ class Order(BaseModel):
 
 
 class OrderCreate(BaseModel):
-    table_id: int
-    customer_id: int | None = None
+    table_id: UUID
+    customer_id: UUID | None = None
     type: OrderType
 
 
 class Station(BaseModel):
-    id: int
+    id: UUID
     name: str
     is_active: bool = True
 
@@ -168,19 +169,19 @@ class StationCreate(BaseModel):
 
 
 class KitchenTicket(BaseModel):
-    order_id: int
-    station_id: int
+    order_id: UUID
+    station_id: UUID
     table_number: int
     placed_at: datetime
     items: list[OrderItem]
 
 
 class OrderEvent(BaseModel):
-    id: int
-    order_id: int
-    order_item_id: int | None = None
+    id: UUID
+    order_id: UUID
+    order_item_id: UUID | None = None
     event_type: EventType
-    actor_id: int | None = None
+    actor_id: UUID | None = None
     payload: dict[str, Any] = Field(default_factory=dict)
     created_at: datetime
 
