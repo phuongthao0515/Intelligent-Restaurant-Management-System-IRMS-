@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import uuid
+from uuid import UUID
+
 from fastapi import HTTPException, status
 
 from app.shared.models import (
@@ -24,11 +27,11 @@ class KdsService:
         return list(store.stations.values())
 
     def create_station(self, payload: StationCreate) -> Station:
-        station = Station(id=store.next_station_id(), **payload.model_dump())
+        station = Station(id=uuid.uuid4(), **payload.model_dump())
         store.stations[station.id] = station
         return station
 
-    def list_tickets(self, station_id: int, status_filter: str | None = None) -> list[KitchenTicket]:
+    def list_tickets(self, station_id: UUID, status_filter: str | None = None) -> list[KitchenTicket]:
         if station_id not in store.stations:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Station not found")
 
@@ -58,7 +61,7 @@ class KdsService:
         return tickets
 
     def update_order_item_status(
-        self, order_item_id: int, payload: ItemStatusUpdate
+        self, order_item_id: UUID, payload: ItemStatusUpdate
     ) -> OrderItem:
         for order_id, order in store.orders.items():
             for index, item in enumerate(order.items):
@@ -88,12 +91,12 @@ class KdsService:
                 return updated_item
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Order item not found")
 
-    def bump_order_item(self, order_item_id: int) -> OrderItem:
+    def bump_order_item(self, order_item_id: UUID) -> OrderItem:
         return self.update_order_item_status(
             order_item_id, ItemStatusUpdate(new_status=ItemStatus.READY)
         )
 
-    def recall_order(self, order_id: int, payload: RecallOrderRequest | None = None) -> Order:
+    def recall_order(self, order_id: UUID, payload: RecallOrderRequest | None = None) -> Order:
         order = store.orders.get(order_id)
         if order is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Order not found")
@@ -106,7 +109,7 @@ class KdsService:
         )
         return updated
 
-    def list_events(self, order_id: int | None = None, since: str | None = None) -> list[OrderEvent]:
+    def list_events(self, order_id: UUID | None = None, since: str | None = None) -> list[OrderEvent]:
         events = list(store.events.values())
         if order_id is not None:
             events = [event for event in events if event.order_id == order_id]

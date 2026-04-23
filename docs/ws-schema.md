@@ -16,7 +16,7 @@ Scope: two modules — **Ordering** and **KDS**. Auth is out of scope; connectio
   { "type": "ticket.created", "data": { ... }, "ts": "2026-04-12T14:03:11Z" }
   ```
 - **Timestamps:** ISO-8601 UTC (`Z` suffix).
-- **IDs:** integers, matching REST resource IDs.
+- **IDs:** UUID strings, matching REST resource IDs.
 - **Unknown fields:** clients MUST ignore fields they don't recognize (forward compatibility).
 - **Reconnect:** client reconnects with exponential backoff (1s → 2s → 4s → 8s, capped 30s). On reconnect, client re-fetches REST state to recover any missed messages (at-most-once delivery — no replay buffer in v1).
 - **Heartbeat:** client sends `{ "type": "ping" }` every 20s; server replies `{ "type": "pong" }`. Missed pong for 40s → client closes and reconnects.
