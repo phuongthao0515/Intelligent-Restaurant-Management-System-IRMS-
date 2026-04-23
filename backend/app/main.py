@@ -9,6 +9,9 @@ from fastapi import FastAPI
 
 from app import models  # noqa: F401
 from app.database import init_db
+from app.modules.kds.router import router as kds_router
+from app.modules.kds.websocket import router as kds_ws_router
+from app.modules.ordering.router import router as ordering_router
 
 
 def _configure_logging() -> None:
@@ -33,7 +36,16 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     yield
 
 
-app = FastAPI(title="IRMS API", version="0.1.0", lifespan=lifespan)
+app = FastAPI(
+    title="IRMS API",
+    version="0.1.0",
+    description="Backend for Ordering and KDS modules.",
+    lifespan=lifespan,
+)
+
+app.include_router(ordering_router, prefix="/api/v1")
+app.include_router(kds_router, prefix="/api/v1")
+app.include_router(kds_ws_router)
 
 
 @app.get("/health")

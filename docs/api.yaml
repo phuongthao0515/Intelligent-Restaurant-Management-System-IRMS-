@@ -80,7 +80,7 @@ paths:
       parameters:
         - in: query
           name: category_id
-          schema: { type: integer }
+          schema: { type: string, format: uuid }
         - in: query
           name: is_available
           schema: { type: boolean }
@@ -177,7 +177,7 @@ paths:
       - in: path
         name: table_id
         required: true
-        schema: { type: integer }
+        schema: { type: string, format: uuid }
     get:
       tags: [tables]
       summary: Get a table
@@ -197,7 +197,7 @@ paths:
       parameters:
         - in: query
           name: table_id
-          schema: { type: integer }
+          schema: { type: string, format: uuid }
         - in: query
           name: status
           schema: { $ref: '#/components/schemas/OrderStatus' }
@@ -366,7 +366,7 @@ paths:
       - in: path
         name: station_id
         required: true
-        schema: { type: integer }
+        schema: { type: string, format: uuid }
     get:
       tags: [kds]
       summary: List active tickets for a station
@@ -391,7 +391,7 @@ paths:
       - in: path
         name: order_item_id
         required: true
-        schema: { type: integer }
+        schema: { type: string, format: uuid }
     patch:
       tags: [kds]
       summary: Transition an order item's status
@@ -418,7 +418,7 @@ paths:
       - in: path
         name: order_item_id
         required: true
-        schema: { type: integer }
+        schema: { type: string, format: uuid }
     post:
       tags: [kds]
       summary: Shortcut — mark an item READY
@@ -458,7 +458,7 @@ paths:
       parameters:
         - in: query
           name: order_id
-          schema: { type: integer }
+          schema: { type: string, format: uuid }
         - in: query
           name: since
           schema: { type: string, format: date-time }
@@ -481,17 +481,17 @@ components:
       in: path
       name: order_id
       required: true
-      schema: { type: integer }
+      schema: { type: string, format: uuid }
     ItemId:
       in: path
       name: item_id
       required: true
-      schema: { type: integer }
+      schema: { type: string, format: uuid }
     CategoryId:
       in: path
       name: category_id
       required: true
-      schema: { type: integer }
+      schema: { type: string, format: uuid }
 
   responses:
     NotFound:
@@ -547,7 +547,7 @@ components:
       type: object
       required: [id, name, display_order]
       properties:
-        id: { type: integer }
+        id: { type: string, format: uuid }
         name: { type: string }
         display_order: { type: integer }
 
@@ -568,12 +568,12 @@ components:
       type: object
       required: [id, name, price, category_id, station_id, is_available]
       properties:
-        id: { type: integer }
+        id: { type: string, format: uuid }
         name: { type: string }
         description: { type: string }
         price: { $ref: '#/components/schemas/Money' }
-        category_id: { type: integer }
-        station_id: { type: integer }
+        category_id: { type: string, format: uuid }
+        station_id: { type: string, format: uuid }
         prep_time_min: { type: integer }
         is_available: { type: boolean }
         customization_schema:
@@ -588,8 +588,8 @@ components:
         name: { type: string }
         description: { type: string }
         price: { $ref: '#/components/schemas/Money' }
-        category_id: { type: integer }
-        station_id: { type: integer }
+        category_id: { type: string, format: uuid }
+        station_id: { type: string, format: uuid }
         prep_time_min: { type: integer }
         is_available: { type: boolean }
         customization_schema: { type: object, additionalProperties: true }
@@ -600,8 +600,8 @@ components:
         name: { type: string }
         description: { type: string }
         price: { $ref: '#/components/schemas/Money' }
-        category_id: { type: integer }
-        station_id: { type: integer }
+        category_id: { type: string, format: uuid }
+        station_id: { type: string, format: uuid }
         prep_time_min: { type: integer }
         customization_schema: { type: object, additionalProperties: true }
 
@@ -610,7 +610,7 @@ components:
       type: object
       required: [id, number, seats]
       properties:
-        id: { type: integer }
+        id: { type: string, format: uuid }
         number: { type: integer }
         seats: { type: integer }
         is_occupied: { type: boolean }
@@ -620,9 +620,9 @@ components:
       type: object
       required: [id, table_id, type, status, items, created_at]
       properties:
-        id: { type: integer }
-        table_id: { type: integer }
-        customer_id: { type: integer, nullable: true }
+        id: { type: string, format: uuid }
+        table_id: { type: string, format: uuid }
+        customer_id: { type: string, format: uuid, nullable: true }
         type: { $ref: '#/components/schemas/OrderType' }
         status: { $ref: '#/components/schemas/OrderStatus' }
         subtotal: { $ref: '#/components/schemas/Money' }
@@ -638,21 +638,21 @@ components:
       type: object
       required: [table_id, type]
       properties:
-        table_id: { type: integer }
-        customer_id: { type: integer }
+        table_id: { type: string, format: uuid }
+        customer_id: { type: string, format: uuid }
         type: { $ref: '#/components/schemas/OrderType' }
 
     OrderItem:
       type: object
       required: [id, order_id, menu_item_id, qty, unit_price, status, station_id]
       properties:
-        id: { type: integer }
-        order_id: { type: integer }
-        menu_item_id: { type: integer }
+        id: { type: string, format: uuid }
+        order_id: { type: string, format: uuid }
+        menu_item_id: { type: string, format: uuid }
         qty: { type: integer }
         unit_price: { $ref: '#/components/schemas/Money' }
         status: { $ref: '#/components/schemas/ItemStatus' }
-        station_id: { type: integer }
+        station_id: { type: string, format: uuid }
         customizations: { $ref: '#/components/schemas/Customizations' }
         allergy_notes: { type: string }
         started_at: { type: string, format: date-time, nullable: true }
@@ -662,7 +662,7 @@ components:
       type: object
       required: [menu_item_id, qty]
       properties:
-        menu_item_id: { type: integer }
+        menu_item_id: { type: string, format: uuid }
         qty: { type: integer }
         customizations: { $ref: '#/components/schemas/Customizations' }
         allergy_notes: { type: string }
@@ -679,7 +679,7 @@ components:
       type: object
       required: [id, name, is_active]
       properties:
-        id: { type: integer }
+        id: { type: string, format: uuid }
         name: { type: string }
         is_active: { type: boolean }
 
@@ -697,8 +697,8 @@ components:
         Not a DB table — assembled server-side for the KDS screen.
       required: [order_id, station_id, table_number, items, placed_at]
       properties:
-        order_id: { type: integer }
-        station_id: { type: integer }
+        order_id: { type: string, format: uuid }
+        station_id: { type: string, format: uuid }
         table_number: { type: integer }
         placed_at: { type: string, format: date-time }
         items:
@@ -709,10 +709,10 @@ components:
       type: object
       required: [id, order_id, event_type, created_at]
       properties:
-        id: { type: integer }
-        order_id: { type: integer }
-        order_item_id: { type: integer, nullable: true }
+        id: { type: string, format: uuid }
+        order_id: { type: string, format: uuid }
+        order_item_id: { type: string, format: uuid, nullable: true }
         event_type: { $ref: '#/components/schemas/EventType' }
-        actor_id: { type: integer, nullable: true }
+        actor_id: { type: string, format: uuid, nullable: true }
         payload: { type: object, additionalProperties: true }
         created_at: { type: string, format: date-time }
