@@ -67,17 +67,18 @@ class KdsService:
             for index, item in enumerate(order.items):
                 if item.id != order_item_id:
                     continue
+                changed_at = utc_now()
                 updated_item = item.model_copy(update={"status": payload.new_status})
                 if payload.new_status == ItemStatus.PREPARING:
-                    updated_item.started_at = utc_now()
+                    updated_item.started_at = changed_at
                 if payload.new_status == ItemStatus.READY:
-                    updated_item.ready_at = utc_now()
+                    updated_item.ready_at = changed_at
                 items = list(order.items)
                 items[index] = updated_item
                 updated_order = order.model_copy(update={"items": items})
                 if all(current.status == ItemStatus.READY for current in items):
                     updated_order = updated_order.model_copy(
-                        update={"status": OrderStatus.READY, "ready_at": utc_now()}
+                        update={"status": OrderStatus.READY, "ready_at": changed_at}
                     )
                 elif any(current.status in {ItemStatus.QUEUED, ItemStatus.PREPARING} for current in items):
                     updated_order = updated_order.model_copy(update={"status": OrderStatus.IN_KITCHEN})
@@ -89,6 +90,7 @@ class KdsService:
                     payload={"new_status": payload.new_status.value, "reason": payload.reason},
                 )
                 return updated_item
+            
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Order item not found")
 
     def bump_order_item(self, order_item_id: UUID) -> OrderItem:
@@ -98,15 +100,27 @@ class KdsService:
 
     def recall_order(self, order_id: UUID, payload: RecallOrderRequest | None = None) -> Order:
         order = store.orders.get(order_id)
+
         if order is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Order not found")
-        updated = order.model_copy(update={"status": OrderStatus.IN_KITCHEN, "ready_at": None})
+
+        updated = order.model_copy(
+            update={
+                "status": OrderStatus.IN_KITCHEN,
+                "ready_at": None,
+            }
+        )
+
         store.orders[order_id] = updated
+
         store.add_event(
             order_id,
             EventType.RECALLED,
-            payload={"reason": payload.reason if payload else None},
+            payload={
+                "reason": payload.reason if payload else None,
+            },
         )
+
         return updated
 
     def list_events(self, order_id: UUID | None = None, since: str | None = None) -> list[OrderEvent]:
