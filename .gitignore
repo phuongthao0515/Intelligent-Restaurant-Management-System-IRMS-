@@ -38,3 +38,6 @@ Thumbs.db
 # Binary docs in docs/ (keep markdown/yaml)
 docs/*.docx
 docs/*.pdf
+
+# Local report notes
+SOLID.md
