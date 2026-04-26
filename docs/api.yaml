@@ -263,7 +263,7 @@ paths:
       - $ref: '#/components/parameters/ItemId'
     patch:
       tags: [orders]
-      summary: Update an order item (qty, customizations, notes)
+      summary: Update an order item (quantity, customizations, notes)
       requestBody:
         required: true
         content:
@@ -644,12 +644,12 @@ components:
 
     OrderItem:
       type: object
-      required: [id, order_id, menu_item_id, qty, unit_price, status, station_id]
+      required: [id, order_id, menu_item_id, quantity, unit_price, status, station_id]
       properties:
         id: { type: string, format: uuid }
         order_id: { type: string, format: uuid }
         menu_item_id: { type: string, format: uuid }
-        qty: { type: integer }
+        quantity: { type: integer }
         unit_price: { $ref: '#/components/schemas/Money' }
         status: { $ref: '#/components/schemas/ItemStatus' }
         station_id: { type: string, format: uuid }
@@ -660,17 +660,17 @@ components:
 
     OrderItemCreate:
       type: object
-      required: [menu_item_id, qty]
+      required: [menu_item_id, quantity]
       properties:
         menu_item_id: { type: string, format: uuid }
-        qty: { type: integer }
+        quantity: { type: integer }
         customizations: { $ref: '#/components/schemas/Customizations' }
         allergy_notes: { type: string }
 
     OrderItemUpdate:
       type: object
       properties:
-        qty: { type: integer }
+        quantity: { type: integer }
         customizations: { $ref: '#/components/schemas/Customizations' }
         allergy_notes: { type: string }
 
