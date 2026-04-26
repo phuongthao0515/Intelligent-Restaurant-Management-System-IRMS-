@@ -60,7 +60,7 @@ Fired when an order is submitted and one or more of its items are routed to this
       "order_item_id": 42,
       "menu_item_id": 7,
       "menu_item_name": "Grilled Salmon",
-      "qty": 2,
+      "quantity": 2,
       "status": "QUEUED",
       "customizations": { "doneness": "medium", "no_butter": true },
       "allergy_notes": "nut allergy",

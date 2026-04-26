@@ -34,7 +34,11 @@ Thumbs.db
 
 # Local database / temp files
 *.sqlite3
+*.db
 
 # Binary docs in docs/ (keep markdown/yaml)
 docs/*.docx
 docs/*.pdf
+
+# Local report notes
+SOLID.md
