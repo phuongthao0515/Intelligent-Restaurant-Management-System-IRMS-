@@ -61,7 +61,6 @@ class OrderService:
             id=uuid.uuid4(),
             table_id=payload.table_id,
             customer_id=payload.customer_id,
-            type=payload.type,
             status=OrderStatus.DRAFT,
             created_at=utc_now(),
         )
