@@ -15,6 +15,25 @@ param(
 $ErrorActionPreference = "Stop"
 $API = "http://localhost:8000"
 
+# 0. Pre-check: Docker Engine running?
+# Use cmd.exe wrapper to discard stderr at OS level (avoids PowerShell
+# wrapping Docker CLI plugin warnings as ErrorRecord under ErrorAction=Stop).
+Write-Host "[0/5] Checking Docker..." -ForegroundColor Cyan
+cmd /c "docker info >nul 2>&1"
+if ($LASTEXITCODE -ne 0) {
+    Write-Host ""
+    Write-Host "Docker Desktop is not running." -ForegroundColor Red
+    Write-Host "Please:"
+    Write-Host "  1. Open Docker Desktop from Start menu"
+    Write-Host "  2. Wait for the whale icon in taskbar to turn green"
+    Write-Host "  3. Run this script again"
+    Write-Host ""
+    Write-Host "If Docker Desktop is not installed:" -ForegroundColor Yellow
+    Write-Host "  Download from https://www.docker.com/products/docker-desktop"
+    exit 1
+}
+Write-Host "  Docker is running." -ForegroundColor Green
+
 # 1. Optional reset (wipes pgdata volume so init_db rebuilds schema)
 if ($Reset) {
     Write-Host "[1/5] Wiping Postgres volume..." -ForegroundColor Yellow
