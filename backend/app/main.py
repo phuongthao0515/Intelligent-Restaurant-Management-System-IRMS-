@@ -45,8 +45,6 @@ app = FastAPI(
 
 app.include_router(ordering_router, prefix="/api/v1")
 app.include_router(kds_router, prefix="/api/v1")
-app.include_router(kds_ws_router)
-
 
 @app.get("/health")
 async def health() -> dict[str, str]:
