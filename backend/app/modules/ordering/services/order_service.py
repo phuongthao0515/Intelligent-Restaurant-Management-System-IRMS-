@@ -25,7 +25,7 @@ from app.shared.models import (
     OrderStatus,
     utc_now,
 )
-
+from app.shared.domain_events import ORDER_CANCELLED, ORDER_PLACED, ORDER_SERVED
 
 class OrderService:
     """Actor: server — front-of-house staff (waiter) who takes
@@ -163,7 +163,25 @@ class OrderService:
         )
         self._orders.save_order(updated)
         self._orders.add_event(
-            order_id, EventType.PLACED, payload={"status": updated.status.value}
+            order_id,
+            EventType.PLACED,
+            payload={
+                "event": ORDER_PLACED,
+                "status": updated.status.value,
+                "table_id": str(updated.table_id),
+                "placed_at": updated.placed_at.isoformat() if updated.placed_at else None,
+                "items": [
+                    {
+                        "item_id": str(it.id),
+                        "menu_item_id": str(it.menu_item_id),
+                        "station_id": str(it.station_id),
+                        "quantity": it.quantity,
+                        "customizations": it.customizations,
+                        "allergy_notes": it.allergy_notes,
+                    }
+                    for it in updated.items
+                ],
+            },
         )
         return updated
 
@@ -174,7 +192,35 @@ class OrderService:
         updated = order.model_copy(update={"status": OrderStatus.CANCELLED})
         self._orders.save_order(updated)
         self._orders.add_event(
-            order_id, EventType.CANCELLED, payload={"reason": reason}
+            order_id,
+            EventType.CANCELLED,
+            payload={
+                "event": ORDER_CANCELLED,
+                "reason": reason,
+                "table_id": str(updated.table_id),
+            },
+        )
+        return updated
+
+    def serve_order(self, order_id: UUID) -> Order:
+        order = self.get_order(order_id)
+        if order.status != OrderStatus.READY:
+            raise HTTPException(
+                status.HTTP_409_CONFLICT, "Only ready orders can be served"
+            )
+        updated = order.model_copy(
+            update={"status": OrderStatus.SERVED, "served_at": utc_now()}
+        )
+        self._orders.save_order(updated)
+        self._orders.add_event(
+            order_id,
+            EventType.STATUS_CHANGED,
+            payload={
+                "event": ORDER_SERVED,
+                "status": updated.status.value,
+                "table_id": str(updated.table_id),
+                "served_at": updated.served_at.isoformat() if updated.served_at else None,
+            },
         )
         return updated
 
