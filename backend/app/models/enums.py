@@ -25,7 +25,7 @@ class OrderPriority(str, Enum):
     VIP = "VIP"
 
 
-class OrderItemStatus(str, Enum):
+class ItemStatus(str, Enum):
     QUEUED = "QUEUED"
     PREPARING = "PREPARING"
     READY = "READY"
@@ -54,10 +54,9 @@ class PaymentMethod(str, Enum):
     WALLET = "WALLET"
 
 
-class OrderEventType(str, Enum):
+class EventType(str, Enum):
     PLACED = "PLACED"
+    ROUTED = "ROUTED"
     STATUS_CHANGED = "STATUS_CHANGED"
-    ITEM_STATUS_CHANGED = "ITEM_STATUS_CHANGED"
-    CANCELLED = "CANCELLED"
-    REFUNDED = "REFUNDED"
     RECALLED = "RECALLED"
+    CANCELLED = "CANCELLED"
