@@ -7,11 +7,32 @@ import structlog
 from sqlalchemy import select
 
 from app.database import async_session_maker
-from app.models import Customer, MenuItem, RestaurantTable, Staff
+from app.models import (
+    Customer,
+    MenuCategory,
+    MenuItem,
+    RestaurantTable,
+    Staff,
+    Station,
+)
 from app.models.enums import StaffRole, TableStatus
 
 logger = structlog.get_logger(__name__)
 
+
+CATEGORY_DATA: list[tuple[str, int]] = [
+    ("APPETIZER", 1),
+    ("MAIN", 2),
+    ("DESSERT", 3),
+    ("BEVERAGE", 4),
+]
+
+STATION_DATA: list[tuple[str, bool]] = [
+    ("GRILL", True),
+    ("COLD", True),
+    ("KITCHEN", True),
+    ("BAR", True),
+]
 
 STAFF_DATA: list[tuple[str, str, StaffRole]] = [
     ("Alice Nguyen", "+84900000001", StaffRole.MANAGER),
@@ -37,29 +58,38 @@ CUSTOMER_DATA: list[tuple[str, str]] = [
     ("Jenny Do", "+84910000003"),
 ]
 
+# (name, category_name, description, price, station_name, is_combo, prep_time_min)
 MENU_DATA: list[tuple[str, str, str, Decimal, str, bool, int]] = [
     ("Caesar Salad", "APPETIZER", "Romaine, parmesan, croutons", Decimal("8.00"), "COLD", False, 5),
     ("Bruschetta", "APPETIZER", "Toasted bread, tomato, basil", Decimal("7.00"), "COLD", False, 5),
     ("Chicken Wings", "APPETIZER", "Smoked, buffalo glaze", Decimal("10.00"), "GRILL", False, 15),
-    ("French Fries", "APPETIZER", "Crispy skin-on fries", Decimal("5.00"), "GRILL", False, 10),
+    ("French Fries", "APPETIZER", "Crispy skin-on fries", Decimal("5.00"), "KITCHEN", False, 10),
     ("Ribeye Steak", "MAIN", "12oz prime ribeye, garlic butter", Decimal("32.00"), "GRILL", False, 20),
     ("Grilled Salmon", "MAIN", "Atlantic salmon, lemon herb", Decimal("26.00"), "GRILL", False, 18),
-    ("Margherita Pizza", "MAIN", "San Marzano, mozzarella, basil", Decimal("18.00"), "GRILL", False, 15),
+    ("Margherita Pizza", "MAIN", "San Marzano, mozzarella, basil", Decimal("18.00"), "KITCHEN", False, 15),
     ("Beef Burger", "MAIN", "Angus patty, cheddar, brioche", Decimal("16.00"), "GRILL", False, 12),
     ("Steak & Wine Combo", "MAIN", "Ribeye + house red pairing", Decimal("42.00"), "GRILL", True, 25),
     ("Tiramisu", "DESSERT", "Classic Italian, mascarpone", Decimal("9.00"), "COLD", False, 3),
-    ("Mojito", "DESSERT", "White rum, lime, mint", Decimal("11.00"), "BAR", False, 4),
-    ("House Red", "DESSERT", "Glass of house red wine", Decimal("12.00"), "BAR", False, 2),
+    ("Mojito", "BEVERAGE", "White rum, lime, mint", Decimal("11.00"), "BAR", False, 4),
+    ("House Red", "BEVERAGE", "Glass of house red wine", Decimal("12.00"), "BAR", False, 2),
 ]
 
 
 async def seed() -> None:
     async with async_session_maker() as db:
-        existing = await db.scalar(select(Staff).limit(1))
+        existing = await db.scalar(select(MenuCategory).limit(1))
         if existing is not None:
-            logger.info("seed.skip", reason="staff already seeded")
+            logger.info("seed.skip", reason="data already seeded")
             return
 
+        categories = [
+            MenuCategory(name=name, display_order=order)
+            for (name, order) in CATEGORY_DATA
+        ]
+        stations = [
+            Station(name=name, is_active=is_active)
+            for (name, is_active) in STATION_DATA
+        ]
         staff = [
             Staff(
                 name=name,
@@ -72,38 +102,57 @@ async def seed() -> None:
         ]
         tables = [
             RestaurantTable(
-                table_number=number,
-                capacity=capacity,
+                number=number,
+                seats=seats,
                 status=TableStatus.AVAILABLE,
             )
-            for (number, capacity) in TABLE_DATA
+            for (number, seats) in TABLE_DATA
         ]
         customers = [
             Customer(name=name, phone_number=phone)
             for (name, phone) in CUSTOMER_DATA
         ]
-        menu_items = [
-            MenuItem(
-                name=name,
-                category=category,
-                description=description,
-                price=price,
-                station=station,
-                is_combo=is_combo,
-                prep_time_min=prep_time_min,
-                is_available=True,
-            )
-            for (name, category, description, price, station, is_combo, prep_time_min) in MENU_DATA
-        ]
 
+        db.add_all(categories)
+        db.add_all(stations)
         db.add_all(staff)
         db.add_all(tables)
         db.add_all(customers)
+        await db.flush()
+
+        categories_by_name = {c.name: c for c in categories}
+        stations_by_name = {s.name: s for s in stations}
+
+        menu_items = [
+            MenuItem(
+                name=name,
+                category_id=categories_by_name[category_name].id,
+                station_id=stations_by_name[station_name].id,
+                description=description,
+                price=price,
+                is_combo=is_combo,
+                prep_time_min=prep_time_min,
+                is_available=True,
+                customization_schema={},
+            )
+            for (
+                name,
+                category_name,
+                description,
+                price,
+                station_name,
+                is_combo,
+                prep_time_min,
+            ) in MENU_DATA
+        ]
+
         db.add_all(menu_items)
         await db.commit()
 
         logger.info(
             "seed.complete",
+            categories=len(categories),
+            stations=len(stations),
             staff=len(staff),
             tables=len(tables),
             customers=len(customers),
