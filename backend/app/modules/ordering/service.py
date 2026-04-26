@@ -29,6 +29,7 @@ from app.shared.store import store
 
 
 class OrderingService:
+
     def list_categories(self) -> list[MenuCategory]:
         return list(store.categories.values())
 
@@ -200,6 +201,7 @@ class OrderingService:
         order = self.get_order(order_id)
         if order.status in {OrderStatus.CLOSED, OrderStatus.CANCELLED}:
             raise HTTPException(status.HTTP_409_CONFLICT, "Order already finished")
+
         updated = order.model_copy(update={"status": OrderStatus.CANCELLED})
         store.orders[order_id] = updated
         store.add_event(order_id, EventType.CANCELLED, payload={"reason": reason})
