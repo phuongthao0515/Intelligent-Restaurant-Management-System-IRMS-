@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from fastapi import APIRouter, Response, status
+from fastapi import APIRouter, Depends, Response, status
 
-from app.modules.ordering.services.menu_service import menu_service
-from app.modules.ordering.services.order_service import order_service
-from app.modules.ordering.services.table_service import table_service
-
+from app.deps import get_menu_service, get_order_service, get_table_service
+from app.modules.ordering.services.menu_service import MenuService
+from app.modules.ordering.services.order_service import OrderService
+from app.modules.ordering.services.table_service import TableService
 from app.shared.models import (
     ItemAvailabilityUpdate,
     MenuCategory,
@@ -31,8 +31,10 @@ router = APIRouter()
 
 
 @router.get("/menu/categories", tags=["menu"], response_model=list[MenuCategory])
-def list_menu_categories() -> list[MenuCategory]:
-    return menu_service.list_categories()
+async def list_menu_categories(
+    service: MenuService = Depends(get_menu_service),
+) -> list[MenuCategory]:
+    return await service.list_categories()
 
 
 @router.post(
@@ -41,25 +43,31 @@ def list_menu_categories() -> list[MenuCategory]:
     status_code=status.HTTP_201_CREATED,
     response_model=MenuCategory,
 )
-def create_menu_category(payload: MenuCategoryCreate) -> MenuCategory:
-    return menu_service.create_category(payload)
+async def create_menu_category(
+    payload: MenuCategoryCreate,
+    service: MenuService = Depends(get_menu_service),
+) -> MenuCategory:
+    return await service.create_category(payload)
 
 
 @router.patch(
     "/menu/categories/{category_id}", tags=["menu"], response_model=MenuCategory
 )
-def update_menu_category(
-    category_id: UUID, payload: MenuCategoryUpdate
+async def update_menu_category(
+    category_id: UUID,
+    payload: MenuCategoryUpdate,
+    service: MenuService = Depends(get_menu_service),
 ) -> MenuCategory:
-    return menu_service.update_category(category_id, payload)
+    return await service.update_category(category_id, payload)
 
 
 @router.get("/menu/items", tags=["menu"], response_model=list[MenuItem])
-def list_menu_items(
+async def list_menu_items(
     category_id: UUID | None = None,
     is_available: bool | None = None,
+    service: MenuService = Depends(get_menu_service),
 ) -> list[MenuItem]:
-    return menu_service.list_menu_items(category_id, is_available)
+    return await service.list_menu_items(category_id, is_available)
 
 
 @router.post(
@@ -68,44 +76,63 @@ def list_menu_items(
     status_code=status.HTTP_201_CREATED,
     response_model=MenuItem,
 )
-def create_menu_item(payload: MenuItemCreate) -> MenuItem:
-    return menu_service.create_menu_item(payload)
+async def create_menu_item(
+    payload: MenuItemCreate,
+    service: MenuService = Depends(get_menu_service),
+) -> MenuItem:
+    return await service.create_menu_item(payload)
 
 
 @router.get("/menu/items/{item_id}", tags=["menu"], response_model=MenuItem)
-def get_menu_item(item_id: UUID) -> MenuItem:
-    return menu_service.get_menu_item(item_id)
+async def get_menu_item(
+    item_id: UUID,
+    service: MenuService = Depends(get_menu_service),
+) -> MenuItem:
+    return await service.get_menu_item(item_id)
 
 
 @router.patch("/menu/items/{item_id}", tags=["menu"], response_model=MenuItem)
-def update_menu_item(item_id: UUID, payload: MenuItemUpdate) -> MenuItem:
-    return menu_service.update_menu_item(item_id, payload)
+async def update_menu_item(
+    item_id: UUID,
+    payload: MenuItemUpdate,
+    service: MenuService = Depends(get_menu_service),
+) -> MenuItem:
+    return await service.update_menu_item(item_id, payload)
 
 
 @router.patch(
     "/menu/items/{item_id}/availability", tags=["menu"], response_model=MenuItem
 )
-def update_item_availability(
-    item_id: UUID, payload: ItemAvailabilityUpdate
+async def update_item_availability(
+    item_id: UUID,
+    payload: ItemAvailabilityUpdate,
+    service: MenuService = Depends(get_menu_service),
 ) -> MenuItem:
-    return menu_service.update_item_availability(item_id, payload)
+    return await service.update_item_availability(item_id, payload)
 
 
 @router.get("/tables", tags=["tables"], response_model=list[Table])
-def list_tables() -> list[Table]:
-    return table_service.list_tables()
+async def list_tables(
+    service: TableService = Depends(get_table_service),
+) -> list[Table]:
+    return await service.list_tables()
 
 
 @router.get("/tables/{table_id}", tags=["tables"], response_model=Table)
-def get_table(table_id: UUID) -> Table:
-    return table_service.get_table(table_id)
+async def get_table(
+    table_id: UUID,
+    service: TableService = Depends(get_table_service),
+) -> Table:
+    return await service.get_table(table_id)
 
 
 @router.get("/orders", tags=["orders"], response_model=list[Order])
-def list_orders(
-    table_id: UUID | None = None, status: OrderStatus | None = None
+async def list_orders(
+    table_id: UUID | None = None,
+    status: OrderStatus | None = None,
+    service: OrderService = Depends(get_order_service),
 ) -> list[Order]:
-    return order_service.list_orders(table_id, status)
+    return await service.list_orders(table_id, status)
 
 
 @router.post(
@@ -114,13 +141,19 @@ def list_orders(
     status_code=status.HTTP_201_CREATED,
     response_model=Order,
 )
-def create_order(payload: OrderCreate) -> Order:
-    return order_service.create_order(payload)
+async def create_order(
+    payload: OrderCreate,
+    service: OrderService = Depends(get_order_service),
+) -> Order:
+    return await service.create_order(payload)
 
 
 @router.get("/orders/{order_id}", tags=["orders"], response_model=Order)
-def get_order(order_id: UUID) -> Order:
-    return order_service.get_order(order_id)
+async def get_order(
+    order_id: UUID,
+    service: OrderService = Depends(get_order_service),
+) -> Order:
+    return await service.get_order(order_id)
 
 
 @router.post(
@@ -129,17 +162,24 @@ def get_order(order_id: UUID) -> Order:
     status_code=status.HTTP_201_CREATED,
     response_model=OrderItem,
 )
-def add_order_item(order_id: UUID, payload: OrderItemCreate) -> OrderItem:
-    return order_service.add_order_item(order_id, payload)
+async def add_order_item(
+    order_id: UUID,
+    payload: OrderItemCreate,
+    service: OrderService = Depends(get_order_service),
+) -> OrderItem:
+    return await service.add_order_item(order_id, payload)
 
 
 @router.patch(
     "/orders/{order_id}/items/{item_id}", tags=["orders"], response_model=OrderItem
 )
-def update_order_item(
-    order_id: UUID, item_id: UUID, payload: OrderItemUpdate
+async def update_order_item(
+    order_id: UUID,
+    item_id: UUID,
+    payload: OrderItemUpdate,
+    service: OrderService = Depends(get_order_service),
 ) -> OrderItem:
-    return order_service.update_order_item(order_id, item_id, payload)
+    return await service.update_order_item(order_id, item_id, payload)
 
 
 @router.delete(
@@ -147,27 +187,44 @@ def update_order_item(
     tags=["orders"],
     status_code=status.HTTP_204_NO_CONTENT,
 )
-def delete_order_item(order_id: UUID, item_id: UUID) -> Response:
-    order_service.remove_order_item(order_id, item_id)
+async def delete_order_item(
+    order_id: UUID,
+    item_id: UUID,
+    service: OrderService = Depends(get_order_service),
+) -> Response:
+    await service.remove_order_item(order_id, item_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.post("/orders/{order_id}/submit", tags=["orders"], response_model=Order)
-def submit_order(order_id: UUID) -> Order:
-    return order_service.submit_order(order_id)
+async def submit_order(
+    order_id: UUID,
+    service: OrderService = Depends(get_order_service),
+) -> Order:
+    return await service.submit_order(order_id)
 
 
 @router.post("/orders/{order_id}/cancel", tags=["orders"], response_model=Order)
-def cancel_order(order_id: UUID, payload: OrderCancelRequest | None = None) -> Order:
+async def cancel_order(
+    order_id: UUID,
+    payload: OrderCancelRequest | None = None,
+    service: OrderService = Depends(get_order_service),
+) -> Order:
     reason = payload.reason if payload else None
-    return order_service.cancel_order(order_id, reason)
+    return await service.cancel_order(order_id, reason)
 
 
 @router.post("/orders/{order_id}/serve", tags=["orders"], response_model=Order)
-def serve_order(order_id: UUID) -> Order:
-    return order_service.serve_order(order_id)
+async def serve_order(
+    order_id: UUID,
+    service: OrderService = Depends(get_order_service),
+) -> Order:
+    return await service.serve_order(order_id)
 
 
 @router.post("/orders/{order_id}/close", tags=["orders"], response_model=Order)
-def close_order(order_id: UUID) -> Order:
-    return order_service.close_order(order_id)
+async def close_order(
+    order_id: UUID,
+    service: OrderService = Depends(get_order_service),
+) -> Order:
+    return await service.close_order(order_id)
