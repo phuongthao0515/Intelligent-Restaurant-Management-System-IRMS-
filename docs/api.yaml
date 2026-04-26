@@ -319,6 +319,20 @@ paths:
               schema: { $ref: '#/components/schemas/Order' }
         '409': { $ref: '#/components/responses/Conflict' }
 
+  /orders/{order_id}/serve:
+    parameters:
+      - $ref: '#/components/parameters/OrderId'
+    post:
+      tags: [orders]
+      summary: Mark a ready order as served (READY -> SERVED)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Order' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
   /orders/{order_id}/close:
     parameters:
       - $ref: '#/components/parameters/OrderId'
