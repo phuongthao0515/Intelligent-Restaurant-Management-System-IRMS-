@@ -10,7 +10,6 @@ from fastapi import FastAPI
 from app import models  # noqa: F401
 from app.database import init_db
 from app.modules.kds.router import router as kds_router
-from app.modules.kds.websocket import router as kds_ws_router
 from app.modules.ordering.router import router as ordering_router
 
 
@@ -45,8 +44,6 @@ app = FastAPI(
 
 app.include_router(ordering_router, prefix="/api/v1")
 app.include_router(kds_router, prefix="/api/v1")
-app.include_router(kds_ws_router)
-
 
 @app.get("/health")
 async def health() -> dict[str, str]:
