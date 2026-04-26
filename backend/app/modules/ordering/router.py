@@ -163,6 +163,11 @@ def cancel_order(order_id: UUID, payload: OrderCancelRequest | None = None) -> O
     return order_service.cancel_order(order_id, reason)
 
 
+@router.post("/orders/{order_id}/serve", tags=["orders"], response_model=Order)
+def serve_order(order_id: UUID) -> Order:
+    return order_service.serve_order(order_id)
+
+
 @router.post("/orders/{order_id}/close", tags=["orders"], response_model=Order)
 def close_order(order_id: UUID) -> Order:
     return order_service.close_order(order_id)
