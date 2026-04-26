@@ -114,7 +114,7 @@ class OrderItem(BaseModel):
     id: UUID
     order_id: UUID
     menu_item_id: UUID
-    qty: int
+    quantity: int
     unit_price: Money
     status: ItemStatus
     station_id: UUID
@@ -126,13 +126,13 @@ class OrderItem(BaseModel):
 
 class OrderItemCreate(BaseModel):
     menu_item_id: UUID
-    qty: int
+    quantity: int
     customizations: Customizations = Field(default_factory=dict)
     allergy_notes: str | None = None
 
 
 class OrderItemUpdate(BaseModel):
-    qty: int | None = None
+    quantity: int | None = None
     customizations: Customizations | None = None
     allergy_notes: str | None = None
 
