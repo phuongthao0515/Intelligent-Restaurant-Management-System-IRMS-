@@ -1,0 +1,38 @@
+.welcome-page {
+  height: 98vh;
+  width: 100%;
+  background: url("https://images.unsplash.com/photo-1555396273-367ea4eb4db5") center/cover no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.overlay {
+  text-align: center;
+  background: rgba(0, 0, 0, 0.55);
+  padding: 60px;
+  border-radius: 16px;
+  color: white;
+}
+
+.overlay h1 {
+  font-size: 48px;
+  letter-spacing: 3px;
+  margin-bottom: 20px;
+}
+
+.enter-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 10px;
+  background: #ff7a00;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.enter-btn:hover {
+  background: #e96b00;
+  transform: scale(1.05);
+}

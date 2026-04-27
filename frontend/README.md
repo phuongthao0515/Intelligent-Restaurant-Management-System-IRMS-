@@ -1,3 +1,28 @@
+# Order format
+```
+{
+	"table_id":"1",
+	"type":"DINE_IN",
+	"status":"PLACED",
+	"items":[
+		{
+		"menu_item_id":"f5",
+		"qty":1,
+		"unit_price":"90000",
+		"status":"QUEUED",
+		"station_id":"1",
+		"customizations":{
+			"0":"a",
+			"1":"b"},
+		"allergy_notes":""
+		}
+	],
+	"created_at":"2026-04-27T17:58:49.655Z",
+	"order_id":0
+}
+```
+
+
 # React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
