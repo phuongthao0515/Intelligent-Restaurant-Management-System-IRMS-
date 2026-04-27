@@ -1,21 +1,191 @@
-.order-item {
+.order-panel {
+  width: 350px;
+  background: #ffffff;
+  border-left: 2px solid #ffe0c2;
   display: flex;
-  justify-content: space-between;
-  padding: 10px;
-  border-bottom: 1px solid #eee;
+  flex-direction: column;
+  height: 100vh;
 }
 
-.submit-btn {
-  width: 100%;
-  margin-top: 20px;
+/* HEADER */
+.order-header {
+  padding: 16px;
+  border-bottom: 1px solid #f1f1f1;
+  background: #ff7a00;
+}
+
+.order-header h2 {
+  color: white;
+  font-size: 20px;
+}
+
+/* LIST */
+.order-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+/* EMPTY */
+.empty {
+  text-align: center;
+  color: #aaa;
+  margin-top: 30px;
+}
+
+/* ITEM CARD */
+.order-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  width: 95%;
+  margin: 0 auto 12px;
+
+  padding: 12px 14px;
+
+  background: #ffffff; /* pure white */
+  border-radius: 12px;
+
+  /* 🔥 3D EFFECT */
+  box-shadow: 
+    0 4px 10px rgba(0, 0, 0, 0.08),
+    0 1px 2px rgba(0, 0, 0, 0.05);
+
+  transition: all 0.2s ease;
+}
+
+.order-card:hover {
+  background: #ffdac2;
+}
+
+/* ITEM INFO */
+.order-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.name {
+  font-weight: 600;
+  color: #333;
+}
+
+.price {
+  font-size: 14px;
+  color: #ff7a00;
+}
+
+/* QUANTITY */
+.order-qty {
+  background: #ff7a00;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-weight: bold;
+}
+
+/* header row */
+.notes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+/*NOTE*/
+.order-notes {
   padding: 12px;
-  background: #3498db;
+  border-top: 1px solid #eee;
+  max-height: 200px;
+  overflow-y: auto;
+  background: #fffaf5;
+}
+.notes-header button {
+  background: #ff7a00;
   color: white;
   border: none;
-  border-radius: 8px;
+  padding: 4px 10px;
+  border-radius: 6px;
   cursor: pointer;
 }
 
+.note-item {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.note-label {
+  color: #333;
+  min-width: 70px;
+}
+
+/* input */
+.note-item input {
+  flex: 1;
+  padding: 6px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+
+/* active editing */
+.active-note {
+  border: 1px solid #ff7a00;
+  background: #fff3e6;
+}
+
+/* delete icon */
+.delete-icon {
+  color: #999;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.delete-icon:hover {
+  color: red;
+}
+
+/* ACTIVE ORDER CARD */
+.order-card.active {
+  background: #ffd8b3;
+  border: 2px solid #ff7a00;
+}
+
+/* FOOTER */
+.order-footer {
+  padding: 16px;
+  background: #fff7f0;
+}
+
+/* TOTAL */
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 12px;
+  color: #333;
+}
+
+.total-row .total-amount {
+  color: #ff7a00;
+}
+
+/* BUTTON */
+.submit-btn {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  background: #ff7a00;
+  color: white;
+  font-size: 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s;
+  font-weight: bold;
+}
+
 .submit-btn:hover {
-  background: #2980b9;
+  background: #e96b00;
 }
