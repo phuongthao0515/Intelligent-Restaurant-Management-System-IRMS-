@@ -117,5 +117,27 @@ class KdsService:
             events = [event for event in events if event.created_at.isoformat() >= since]
         return events
 
+    def reset_data(self) -> dict:
+        """Reset all store data to initial state"""
+        # Clear all data
+        store.categories.clear()
+        store.menu_items.clear()
+        store.tables.clear()
+        store.stations.clear()
+        store.orders.clear()
+        store.events.clear()
+        
+        # Reinitialize with fresh test data
+        from app.shared.store import InMemoryStore
+        temp_store = InMemoryStore()
+        store.categories.update(temp_store.categories)
+        store.menu_items.update(temp_store.menu_items)
+        store.tables.update(temp_store.tables)
+        store.stations.update(temp_store.stations)
+        store.orders.update(temp_store.orders)
+        store.events.update(temp_store.events)
+        
+        return {"message": "✅ KDS data reset to initial state", "orders": len(store.orders), "items": len(store.menu_items)}
+
 
 kds_service = KdsService()

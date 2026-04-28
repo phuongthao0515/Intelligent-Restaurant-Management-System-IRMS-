@@ -7,6 +7,7 @@ from fastapi import APIRouter, status
 from app.modules.kds.service import kds_service
 from app.shared.models import (
     ItemStatusUpdate,
+    MenuItem,
     Order,
     OrderEvent,
     OrderItem,
@@ -15,9 +16,16 @@ from app.shared.models import (
     StationCreate,
     KitchenTicket,
 )
+from app.shared.store import store
 
 
 router = APIRouter()
+
+
+@router.get("/menu", tags=["menu"], response_model=list[MenuItem])
+def list_menu() -> list[MenuItem]:
+    """Get all menu items"""
+    return list(store.menu_items.values())
 
 
 @router.get("/kds/stations", tags=["kds"], response_model=list[Station])
@@ -53,3 +61,9 @@ def recall_order(order_id: UUID, payload: RecallOrderRequest | None = None) -> O
 @router.get("/kds/events", tags=["kds"], response_model=list[OrderEvent])
 def list_events(order_id: UUID | None = None, since: str | None = None) -> list[OrderEvent]:
     return kds_service.list_events(order_id, since)
+
+
+@router.post("/kds/reset", tags=["kds"])
+def reset_kds_data() -> dict:
+    """Reset KDS test data to initial state (development only)"""
+    return kds_service.reset_data()
