@@ -1,15 +1,16 @@
 import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import MenuList from "../components/Menu/MenuList";
 import OrderPanel from "../components/Order/OrderPanel";
 import { getOrderById } from "../utils/orderDB";
 import "./OrderingPage.css";
 
 function OrderingPage() {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
   const editId = searchParams.get("edit");
-  const isNew = searchParams.get("new");
+  const tableId = searchParams.get("tableId");
 
   const [selectedCategory, setSelectedCategory] = useState("c1");
   const [selectedItemId, setSelectedItemId] = useState(null);
@@ -21,10 +22,8 @@ function OrderingPage() {
       if (order) {
         setEditingOrder(order);
       }
-    } else if (isNew) {
-      setEditingOrder(null);
     }
-  }, [editId, isNew]);
+  }, [editId]);
 
   const handleSelectItem = (item) => {
     setSelectedCategory(item.category_id);
@@ -54,8 +53,25 @@ function OrderingPage() {
         selectedItemId={selectedItemId}
         setSelectedItemId={setSelectedItemId}
         onSelectItem={handleSelectItem}
+        tableId={tableId}
         editingOrder={editingOrder}
       />
+
+      <div className="floating-actions">
+        <button
+          className="floating-btn"
+          onClick={() => navigate("/")}
+        >
+          🏠 Welcome Page
+        </button>
+
+        <button
+          className="floating-btn"
+          onClick={() => navigate("/orders")}
+        >
+          📋 List of Orders
+        </button>
+      </div>
     </div>
   );
 }

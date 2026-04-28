@@ -3,21 +3,24 @@ import { useOrder } from "../../hooks/useOrder";
 import { formatVND } from "../../utils/format";
 import { FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import { saveOrder, updateOrder } from "../../utils/orderDB";
+import { submitOrder } from "../../utils/orderDB";
+import { getTableById } from "../../utils/tableDB";
+import { getItemById } from "../../utils/menuDB";
 import "./OrderPanel.css";
 
 function OrderPanel({
   selectedItemId,
   setSelectedItemId,
   onSelectItem,
+  tableId,
   editingOrder,
 }) {
   const navigate = useNavigate();
 
-  // 🔥 ADD THIS
+  // sADD THIS
   const { orderItems, setFullOrder, clearOrder } = useOrder();
 
-  const tableId = 1;
+  const table = getTableById(tableId);
 
   const [orderType, setOrderType] = useState(0);
   const [status, setStatus] = useState("DRAFT");
@@ -25,10 +28,10 @@ function OrderPanel({
   const [itemNotes, setItemNotes] = useState({});
   const [selectedNoteItem, setSelectedNoteItem] = useState("");
 
-  // 🔥 LOAD DATA WHEN EDITING
+  // LOAD DATA WHEN EDITING
   useEffect(() => {
     if (!editingOrder) {
-      // ✅ RESET EVERYTHING
+      // RESET EVERYTHING
       clearOrder();
       setOrderType(0);
       setStatus("DRAFT");
@@ -37,13 +40,18 @@ function OrderPanel({
       return;
     }
 
-    // ✅ LOAD ITEMS INTO CONTEXT (VERY IMPORTANT)
-    const loadedItems = editingOrder.items.map((item) => ({
-      id: item.menu_item_id,
-      name: item.menu_item_id, // (you can map real name later)
-      price: Number(item.unit_price),
-      quantity: item.qty,
-    }));
+    // LOAD ITEMS INTO CONTEXT (VERY IMPORTANT)
+    const loadedItems = editingOrder.items.map((item) => {
+      const menuItem = getItemById(item.menu_item_id);
+
+      return {
+        id: menuItem?.id,
+        name: menuItem?.name,
+        price: menuItem?.price,
+        quantity: item.qty,
+        category_id: menuItem?.category_id
+      };
+    });
 
     setFullOrder(loadedItems);
 
@@ -121,42 +129,48 @@ function OrderPanel({
         order_id: editingOrder.order_id,
       }),
 
-      table_id: String(tableId),
+      table_id: String(table.id),
       type: orderType === 0 ? "DINE_IN" : "TAKEAWAY",
       status: "PLACED",
 
-      items: orderItems.map((item) => ({
-        menu_item_id: item.id,
-        qty: item.quantity,
-        unit_price: String(item.price),
-        status: "QUEUED",
-        station_id: "1",
-        customizations: (itemNotes[item.id] || []).reduce(
-          (acc, note, idx) => {
-            if (note.trim() !== "") {
-              acc[idx] = note;
-            }
-            return acc;
-          },
-          {}
-        ),
-        allergy_notes: allergyNote || "",
-      })),
+      items: orderItems.map((item) => {
+        const menu_item = getItemById(item.id);
+        return {
+          menu_item_id: menu_item.id,
+          qty: item.quantity,
+          unit_price: menu_item.price,
+          status: "QUEUED",
+          station_id: menu_item.station_id,
+          customizations: (itemNotes[item.id] || []).reduce(
+            (acc, note, idx) => {
+              if (note.trim() !== "") {
+                acc[idx] = note;
+              }
+              return acc;
+            },
+            {}
+          ),
+          allergy_notes: allergyNote || "",
+        }
+      }),
 
       created_at: editingOrder
         ? editingOrder.created_at
         : new Date().toISOString(),
     };
 
-    if (editingOrder) {
-      updateOrder(payload);
-      console.log("ORDER UPDATED:", payload);
-    } else {
-      const saved = saveOrder(payload);
-      console.log("ORDER CREATED:", saved);
+    if (payload.items.length === 0) {
+      alert("Order must have at least 1 item.");
+      return;
     }
 
-    navigate("/orders");
+    if (editingOrder) {
+      submitOrder(payload, true);
+    } else {
+      submitOrder(payload, false);
+    }
+
+    navigate(`/orders?tableId=${table.id}`);
   };
 
   return (
@@ -169,8 +183,8 @@ function OrderPanel({
         </h2>
 
         <div className="header-right">
-          <div className="table-label">TABLE ID</div>
-          <div className="table-id">{tableId}</div>
+          <div className="table-label">TABLE</div>
+          <div className="table-id">{table.number}</div>
         </div>
       </div>
 

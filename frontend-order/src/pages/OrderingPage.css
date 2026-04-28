@@ -1,0 +1,65 @@
+.app-container {
+  display: flex;
+  height: 98vh;
+}
+
+/* CONTAINER (bottom-left fixed) */
+.floating-actions {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  z-index: 1000;
+}
+
+/* BUTTON BASE */
+.floating-btn {
+  background: white;
+  color: #222;
+
+  border: none;
+  padding: 10px 16px;
+  border-radius: 12px;
+
+  font-size: 0.9rem;
+  font-weight: 500;
+
+  cursor: pointer;
+
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+
+  transition: all 0.25s ease;
+
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* HOVER EFFECT */
+.floating-btn:hover {
+  color: #ff8000;
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 6px 18px rgba(255, 152, 0, 0.3);
+}
+
+/* ACTIVE CLICK */
+.floating-btn:active {
+  transform: scale(0.97);
+}
+
+/* MOBILE */
+@media (max-width: 600px) {
+  .floating-actions {
+    bottom: 15px;
+    left: 15px;
+  }
+
+  .floating-btn {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+  }
+}

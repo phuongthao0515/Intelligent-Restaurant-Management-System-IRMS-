@@ -1,10 +1,9 @@
 #!/bin/bash
 
-echo "🚀 Setting up IRMS Frontend..."
+echo "🚀 Setting up IRMS Frontend Order..."
 
 # go to frontend (create if not exist)
-mkdir -p frontend
-cd frontend || exit
+cd frontend-order
 
 # check if already initialized
 if [ ! -f "package.json" ]; then
@@ -25,5 +24,5 @@ echo "✅ Setup complete!"
 
 echo ""
 echo "👉 Run the project:"
-echo "cd frontend"
+echo "cd frontend-order"
 echo "npm run dev"

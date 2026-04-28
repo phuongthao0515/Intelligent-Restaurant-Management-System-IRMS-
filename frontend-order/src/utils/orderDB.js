@@ -16,12 +16,12 @@ export const getNewOrderId = () => {
 };
 
 // SAVE NEW ORDER
-export const saveOrder = (order) => {
+export const createOrder = (order) => {
   const orders = getOrders();
 
   const newOrder = {
     ...order,
-    order_id: getNewOrderId(), // ✅ ONLY here
+    order_id: getNewOrderId(),
   };
 
   orders.push(newOrder);
@@ -46,3 +46,32 @@ export const getOrderById = (order_id) => {
   const orders = getOrders();
   return orders.find((o) => o.order_id === Number(order_id));
 };
+
+// SUBMIT ORDER (CREATE OR UPDATE)
+export const submitOrder = (order, isUpdate) => {
+  if (isUpdate) {
+    updateOrder(order);
+  } else {
+    createOrder(order); // create new order
+  }
+}
+
+export function closeOrder(orderId, status) {
+  const orders = getOrders();
+
+  const updated = orders.map((o) =>
+    o.order_id === orderId ? { ...o, status } : o
+  );
+
+  localStorage.setItem("orders", JSON.stringify(updated));
+}
+
+export function cancelOrder(orderId) {
+  const orders = getOrders();
+
+  const updated = orders.filter(
+    (o) => o.order_id !== orderId
+  );
+
+  localStorage.setItem("orders", JSON.stringify(updated));
+}
