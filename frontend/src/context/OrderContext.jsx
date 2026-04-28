@@ -17,8 +17,7 @@ export function OrderProvider({ children }) {
         );
       }
 
-      // add note field when creating new item
-      return [...prev, { ...item, quantity: 1, note: "" }];
+      return [...prev, { ...item, quantity: 1 }];
     });
   };
 
@@ -34,15 +33,14 @@ export function OrderProvider({ children }) {
     );
   };
 
-  // ✅ NEW: update note
-  const updateNote = (id, note) => {
-    setOrderItems((prev) =>
-      prev.map((i) =>
-        i.id === id
-          ? { ...i, note }
-          : i
-      )
-    );
+  // 🔥 LOAD ORDER (EDIT MODE)
+  const setFullOrder = (items) => {
+    setOrderItems(items);
+  };
+
+  // 🔥 RESET ORDER (NEW ORDER)
+  const clearOrder = () => {
+    setOrderItems([]);
   };
 
   return (
@@ -51,7 +49,8 @@ export function OrderProvider({ children }) {
         orderItems,
         addItem,
         decreaseItem,
-        updateNote, // expose it
+        setFullOrder,
+        clearOrder,
       }}
     >
       {children}

@@ -1,15 +1,15 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
+import WelcomePage from "./pages/WelcomePage";
 import OrderingPage from "./pages/OrderingPage";
-import KDSPage from "./pages/KDSPage";
+import OrderListPage from "./pages/OrderListPage";
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/order" element={<OrderingPage />} />
-        <Route path="/kds" element={<KDSPage />} />
-      </Routes>
-    </BrowserRouter>
+    <Routes>
+      <Route path="/" element={<WelcomePage />} />
+      <Route path="/create-order" element={<OrderingPage />} />
+      <Route path="/orders" element={<OrderListPage />} />
+    </Routes>
   );
 }
 
