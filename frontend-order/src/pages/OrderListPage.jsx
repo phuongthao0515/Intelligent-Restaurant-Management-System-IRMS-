@@ -4,8 +4,8 @@ import {
   closeOrder,
   cancelOrder,
 } from "../utils/orderDB";
-import { getListTables, updateTableStatus } from "../utils/tableDB";
-import { getItemById } from "../utils/menuDB";
+import { initTables, getListTables } from "../utils/tableDB";
+import { initMenu, getItemById } from "../utils/menuDB";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import "./OrderListPage.css";
 
@@ -19,34 +19,44 @@ function OrderListPage() {
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
-    const data = getOrders();
-    const tableData = getListTables();
+    (async () => {
+      await Promise.all([initTables(), initMenu()]);
+      const tableData = getListTables();
+      setTables(tableData);
 
-    setTables(tableData);
+      const tableId = searchParams.get("tableId");
+      setSelectedTable(tableId || tableData[0]?.id || null);
 
-    const tableId = searchParams.get("tableId");
-    setSelectedTable(tableId || tableData[0]?.id || null);
-
-    setOrders(data);
+      const data = await getOrders();
+      setOrders(data);
+    })();
   }, []);
 
-  const refresh = () => {
-    setOrders(getOrders());
+  const refresh = async () => {
+    setOrders(await getOrders());
     setTables(getListTables());
   };
 
-  const handleCancel = (order) => {
-    cancelOrder(order.order_id);
-    refresh();
+  const handleCancel = async (order) => {
+    try {
+      await cancelOrder(order.id);
+      await refresh();
+    } catch (e) {
+      alert(`Failed to cancel order: ${e.message}`);
+    }
   };
 
-  const handleClose = (order) => {
-    closeOrder(order.order_id, "CLOSED");
-    // updateTableStatus(order.table_id, false);
-    refresh();
+  const handleClose = async (order) => {
+    try {
+      await closeOrder(order.id);
+      await refresh();
+    } catch (e) {
+      alert(`Failed to close order: ${e.message}`);
+    }
   };
 
-  const isClosed = (order) => order.status === "CLOSED";
+  const isFinished = (order) =>
+    ["CLOSED", "CANCELLED"].includes(order.status);
 
   const filteredOrders = orders.filter(
     (o) => String(o.table_id) === String(selectedTable)
@@ -77,31 +87,34 @@ function OrderListPage() {
 
         <div className="olp-order-header">
           <h2>📋 Orders</h2>
-          <button onClick={() => navigate("/")}>➕ New Order</button>
+          <button
+            onClick={() =>
+              selectedTable && navigate(`/create-order?tableId=${selectedTable}`)
+            }
+          >
+            ➕ New Order
+          </button>
         </div>
 
         {filteredOrders.length === 0 && <p>No orders</p>}
 
         <div className="olp-order-grid">
           {filteredOrders.map((order) => {
-            const closed = isClosed(order);
+            const finished = isFinished(order);
+            const canClose = ["READY", "SERVED"].includes(order.status);
 
             return (
               <div
-                key={order.order_id}
+                key={order.id}
                 className={`olp-order-card status-${order.status.toLowerCase()}`}
               >
                 <div className="olp-order-top">
                   <div>
-                    <strong>#{order.order_id}</strong>
+                    <strong>#{order.id.slice(0, 8)}</strong>
                     <div className="olp-order-status">
                       {order.status}
                     </div>
                   </div>
-
-                  <span className="olp-order-type">
-                    {order.type}
-                  </span>
                 </div>
 
                 <div className="olp-order-items">
@@ -109,7 +122,7 @@ function OrderListPage() {
                     const menu = getItemById(item.menu_item_id);
                     return (
                       <div key={idx}>
-                        • {menu?.name || item.menu_item_id} x{item.qty}
+                        • {menu?.name || item.menu_item_id} x{item.quantity}
                       </div>
                     );
                   })}
@@ -121,30 +134,39 @@ function OrderListPage() {
                   </button>
 
                   <button
-                    disabled={closed}
-                    className={closed ? "disabled-btn" : ""}
+                    disabled={order.status !== "DRAFT"}
+                    className={order.status !== "DRAFT" ? "disabled-btn" : ""}
                     onClick={() =>
-                      !closed &&
+                      order.status === "DRAFT" &&
                       navigate(
-                        `/create-order?tableId=${order.table_id}&edit=${order.order_id}`
+                        `/create-order?tableId=${order.table_id}&edit=${order.id}`
                       )
                     }
                   >
                     Modify
                   </button>
 
+                  {["PLACED", "IN_KITCHEN", "READY", "SERVED"].includes(order.status) && (
+                    <button
+                      className="olp-add-more-btn"
+                      onClick={() => navigate(`/create-order?tableId=${order.table_id}`)}
+                    >
+                      Add More
+                    </button>
+                  )}
+
                   <button
-                    disabled={closed}
-                    className={`olp-cancel-btn ${closed ? "disabled-btn" : ""}`}
-                    onClick={() => !closed && handleCancel(order)}
+                    disabled={finished}
+                    className={`olp-cancel-btn ${finished ? "disabled-btn" : ""}`}
+                    onClick={() => !finished && handleCancel(order)}
                   >
                     Cancel
                   </button>
 
                   <button
-                    disabled={closed}
-                    className={`olp-close-btn ${closed ? "disabled-btn" : ""}`}
-                    onClick={() => !closed && handleClose(order)}
+                    disabled={!canClose}
+                    className={`olp-close-btn ${!canClose ? "disabled-btn" : ""}`}
+                    onClick={() => canClose && handleClose(order)}
                   >
                     Close
                   </button>
@@ -164,9 +186,8 @@ function OrderListPage() {
           >
             <h3>📦 Order Detail</h3>
 
-            <p><b>ID:</b> {viewOrder.order_id}</p>
+            <p><b>ID:</b> {viewOrder.id}</p>
             <p><b>Table:</b> {viewOrder.table_id}</p>
-            <p><b>Type:</b> {viewOrder.type}</p>
             <p><b>Status:</b> {viewOrder.status}</p>
             <p><b>Created At:</b> {viewOrder.created_at}</p>
             <p><b>Placed At:</b> {viewOrder.placed_at || "Not placed"}</p>
@@ -181,7 +202,7 @@ function OrderListPage() {
                 <div key={idx} className="olp-overlay-item-detail">
                   <p><b>Name:</b> {menu?.name}</p>
                   <p><b>Station ID:</b> {item.station_id}</p>
-                  <p><b>Quantity:</b> {item.qty}</p>
+                  <p><b>Quantity:</b> {item.quantity}</p>
                   <p><b>Price:</b> {item.unit_price}</p>
                   <p><b>Status:</b> {item.status}</p>
                   <p><b>Allergy Notes:</b> {item.allergy_notes || "None"}</p>
