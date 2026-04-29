@@ -201,8 +201,18 @@ class OrderService:
             raise HTTPException(
                 status.HTTP_409_CONFLICT, "Only ready orders can be served"
             )
+        served_items = [
+            item.model_copy(update={"status": ItemStatus.SERVED})
+            if item.status == ItemStatus.READY
+            else item
+            for item in order.items
+        ]
         updated = order.model_copy(
-            update={"status": OrderStatus.SERVED, "served_at": utc_now()}
+            update={
+                "status": OrderStatus.SERVED,
+                "served_at": utc_now(),
+                "items": served_items,
+            }
         )
         await self._orders.save_order(updated)
         await self._orders.add_event(
