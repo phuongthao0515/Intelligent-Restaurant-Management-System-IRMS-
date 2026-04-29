@@ -35,9 +35,22 @@ export function useDishStatus(dish) {
   };
 
   const handleReady = async () => {
-    await fetch(`${API}/kds/order-items/${dish.id}/bump`, {
-      method: "POST",
-    });
+    setIsTransitioning(true);
+    setTransitioningTo("READY");
+
+    try {
+      const res = await fetch(`${API}/kds/order-items/${dish.id}/bump`, {
+        method: "POST",
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to mark dish ready");
+      }
+    } catch (err) {
+      console.error(err);
+      setIsTransitioning(false);
+      setTransitioningTo(null);
+    }
   };
 
   return {
