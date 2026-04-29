@@ -1,0 +1,1 @@
+export const formatUSD = (value) => "$" + Number(value).toFixed(2);
