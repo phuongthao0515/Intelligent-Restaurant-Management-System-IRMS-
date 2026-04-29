@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { initTables, getListTables, updateTableStatus } from "../utils/tableDB";
+import { initTables, getListTables } from "../utils/tableDB";
 import "./WelcomePage.css";
 
 function WelcomePage() {
@@ -8,22 +8,18 @@ function WelcomePage() {
   const [tables, setTables] = useState([]);
 
   useEffect(() => {
-    initTables();
-
-    const fetchTables = () => {
+    let interval;
+    (async () => {
+      await initTables();
       setTables(getListTables());
-    };
-
-    fetchTables(); // initial load
-
-    const interval = setInterval(fetchTables, 1000); // polling every 1 seconds
-
-    return () => clearInterval(interval);
+      interval = setInterval(() => {
+        setTables(getListTables());
+      }, 5000);
+    })();
+    return () => interval && clearInterval(interval);
   }, []);
 
   const handleSelectTable = (tableId) => {
-    // updateTableStatus(tableId, true);
-    setTables(getListTables());
     navigate(`/create-order?tableId=${tableId}`);
   };
 
