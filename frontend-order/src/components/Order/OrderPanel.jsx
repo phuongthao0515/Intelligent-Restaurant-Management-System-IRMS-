@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useOrder } from "../../hooks/useOrder";
-import { formatVND } from "../../utils/format";
+import { formatUSD } from "../../utils/format";
 import { FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { submitOrder } from "../../utils/orderDB";
@@ -27,6 +27,7 @@ function OrderPanel({
   const [allergyNote, setAllergyNote] = useState("");
   const [itemNotes, setItemNotes] = useState({});
   const [selectedNoteItem, setSelectedNoteItem] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   // LOAD DATA WHEN EDITING
   useEffect(() => {
@@ -48,15 +49,15 @@ function OrderPanel({
         id: menuItem?.id,
         name: menuItem?.name,
         price: menuItem?.price,
-        quantity: item.qty,
+        quantity: item.quantity,
         category_id: menuItem?.category_id
       };
     });
 
     setFullOrder(loadedItems);
 
-    // type
-    setOrderType(editingOrder.type === "DINE_IN" ? 0 : 1);
+    // type 
+    setOrderType(0);
 
     // status
     setStatus(editingOrder.status || "DRAFT");
@@ -123,54 +124,35 @@ function OrderPanel({
   };
 
   // SUBMIT
-  const handleSubmit = () => {
-    const payload = {
-      ...(editingOrder && {
-        order_id: editingOrder.order_id,
-      }),
-
-      table_id: String(table.id),
-      type: orderType === 0 ? "DINE_IN" : "TAKEAWAY",
-      status: "PLACED",
-
-      items: orderItems.map((item) => {
-        const menu_item = getItemById(item.id);
-        return {
-          menu_item_id: menu_item.id,
-          qty: item.quantity,
-          unit_price: menu_item.price,
-          status: "QUEUED",
-          station_id: menu_item.station_id,
-          customizations: (itemNotes[item.id] || []).reduce(
-            (acc, note, idx) => {
-              if (note.trim() !== "") {
-                acc[idx] = note;
-              }
-              return acc;
-            },
-            {}
-          ),
-          allergy_notes: allergyNote || "",
-        }
-      }),
-
-      created_at: editingOrder
-        ? editingOrder.created_at
-        : new Date().toISOString(),
-    };
-
-    if (payload.items.length === 0) {
+  const handleSubmit = async () => {
+    if (orderItems.length === 0) {
       alert("Order must have at least 1 item.");
       return;
     }
 
-    if (editingOrder) {
-      submitOrder(payload, true);
-    } else {
-      submitOrder(payload, false);
-    }
+    const payload = {
+      ...(editingOrder && { id: editingOrder.id }),
+      table_id: table.id,
+      items: orderItems.map((item, i) => ({
+        menu_item_id: item.id,
+        quantity: item.quantity,
+        customizations: (itemNotes[item.id] || []).reduce((acc, note, idx) => {
+          if (note.trim() !== "") acc[String(idx)] = note;
+          return acc;
+        }, {}),
+        allergy_notes: i === 0 ? (allergyNote || null) : null,
+      })),
+    };
 
-    navigate(`/orders?tableId=${table.id}`);
+    setSubmitting(true);
+    try {
+      await submitOrder(payload, !!editingOrder);
+      navigate(`/orders?tableId=${table.id}`);
+    } catch (e) {
+      alert(`Failed to submit order: ${e.message}`);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -229,7 +211,7 @@ function OrderPanel({
             <div className="order-info">
               <span className="name">{item.name}</span>
               <span className="price">
-                {formatVND(item.price)}
+                {formatUSD(item.price)}
               </span>
             </div>
 
@@ -327,15 +309,18 @@ function OrderPanel({
         <div className="total-row">
           <span>Total</span>
           <span className="total-amount">
-            {formatVND(total)}
+            {formatUSD(total)}
           </span>
         </div>
 
         <button
           className="submit-btn"
           onClick={handleSubmit}
+          disabled={submitting}
         >
-          {editingOrder
+          {submitting
+            ? "Submitting..."
+            : editingOrder
             ? "Update Order"
             : "Submit Order"}
         </button>
