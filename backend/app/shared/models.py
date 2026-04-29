@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from decimal import Decimal
 from enum import Enum
 from typing import Any
@@ -9,8 +9,11 @@ from uuid import UUID
 from pydantic import BaseModel, Field
 
 
+ICT = timezone(timedelta(hours=7))
+
+
 def utc_now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(ICT)
 
 
 Money = Decimal
