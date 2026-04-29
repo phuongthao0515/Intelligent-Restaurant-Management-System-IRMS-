@@ -1,0 +1,192 @@
+.kds-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f4f6f8;
+  font-family: Arial, sans-serif;
+}
+
+.kds-header {
+  background: #111;
+  color: white;
+  padding: 12px 20px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.kds-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+}
+
+/* Station row (horizontal layout) */
+.station-row {
+  display: flex;
+  align-items: stretch;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+
+.station-header {
+  width: 160px;
+  min-width: 160px;
+  background: #111;
+  color: white;
+  font-weight: bold;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 12px;
+}
+/* horizontal scroll for dishes */
+.dish-list {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+
+  padding: 12px;
+  overflow-x: auto;
+  flex: 1;
+}
+
+/* dish card */
+.dish-card {
+  min-width: 200px;
+  background: #fff;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 12px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  height: 160px;
+}
+
+.dish-name {
+  font-weight: bold;
+  font-size: 14px;
+  margin-bottom: 6px;
+  word-wrap: break-word;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+  flex-shrink: 0;
+}
+
+.dish-meta {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 6px;
+}
+
+.dish-time {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 8px;
+  min-height: 20px;
+}
+
+.dish-actions {
+  margin-top: auto;
+  display: flex;
+  gap: 6px;
+}
+
+.btn {
+  flex: 1;
+  padding: 6px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.btn-start {
+  background: #3498db;
+  color: white;
+}
+
+.btn-start:hover {
+  background: #2980b9;
+}
+
+.btn-ready {
+  background: #27ae60;
+  color: white;
+}
+
+.btn-ready:hover {
+  background: #229954;
+}
+
+/* urgency */
+.dish-warning {
+  border: 2px solid #f39c12 !important;
+  background: #f7f1e3 !important;
+}
+
+.dish-danger {
+  border: 2px solid #e74c3c !important;
+  background: #fadbd8 !important;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(231, 76, 60, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 15px rgba(231, 76, 60, 0.8);
+  }
+}
+
+.loading {
+  padding: 20px;
+}
+
+/* Status-based styling */
+.dish-card.status-queued {
+  border: 2px solid #3498db;
+  background: #ecf0f1;
+}
+
+.dish-card.status-preparing {
+  border: 2px solid #27ae60;
+  background: #dcfbe2;
+}
+
+/* .dish-card.status-ready {
+  border: 2px solid #27ae60;
+  background: #eafaf1;
+} */
+
+/* Transitioning state - visual feedback */
+.dish-card.dish-transitioning {
+  opacity: 0.8;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  0% {
+    opacity: 0.6;
+    transform: scale(0.98);
+  }
+  100% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+}
+
+/* Disabled button styling */
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
