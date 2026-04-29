@@ -13,11 +13,15 @@ function MenuList({
   const [items, setItems] = useState([]);
 
   useEffect(() => {
-    initMenu();
-    const data = getMenu();
-
-    setCategories(data.categories);
-    setItems(data.items);
+    (async () => {
+      await initMenu();
+      const data = getMenu();
+      setCategories(data.categories);
+      setItems(data.items);
+      if (!selectedCategory && data.categories.length > 0) {
+        setSelectedCategory(data.categories[0].id);
+      }
+    })();
   }, []);
 
   const filteredItems = items.filter(
