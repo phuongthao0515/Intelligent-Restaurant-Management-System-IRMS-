@@ -1,10 +1,9 @@
 import { useOrder } from "../../hooks/useOrder";
-import { formatVND } from "../../utils/format";
+import { formatUSD } from "../../utils/format";
 import "./MenuItem.css";
 
 function MenuItem({ item, selected, onSelectItem }) {
   const { addItem, decreaseItem } = useOrder();
-  const Icon = item.image;
 
   return (
     <div
@@ -13,12 +12,12 @@ function MenuItem({ item, selected, onSelectItem }) {
       }`}
       onClick={() => onSelectItem(item)}   // 🔥 click card sync
     >
-      <div className="icon">
-        {Icon && <Icon size={40} />}
+      <div className="icon" style={{ fontSize: 40 }}>
+        {item.emoji || "🍽️"}
       </div>
 
       <h4>{item.name}</h4>
-      <p>{formatVND(item.price)}</p>
+      <p>{formatUSD(item.price)}</p>
 
       {!item.is_available && <span className="badge">Out</span>}
 
