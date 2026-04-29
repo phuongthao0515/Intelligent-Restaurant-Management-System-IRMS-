@@ -44,7 +44,7 @@ export default function DishCard({ dish, menuItems = {} }) {
     >
       <div className="dish-header">
         <div className="dish-name">{dishName}</div>
-        <div className="dish-qty">x{dish.qty || 1}</div>
+        <div className="dish-qty">x{dish.quantity || 1}</div>
       </div>
 
       {dish.allergy_notes && (

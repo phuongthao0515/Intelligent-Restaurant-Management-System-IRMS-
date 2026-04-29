@@ -14,7 +14,7 @@ export default function KDSPage() {
       // Fetch menu items (one-time or less frequent)
       if (Object.keys(menuItems).length === 0) {
         try {
-          const menuRes = await fetch("/api/v1/menu");
+          const menuRes = await fetch("/api/v1/menu/items");
           if (menuRes.ok) {
             const menuData = await menuRes.json();
             if (Array.isArray(menuData)) {

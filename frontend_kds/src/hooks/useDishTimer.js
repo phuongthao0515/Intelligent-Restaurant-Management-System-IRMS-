@@ -1,12 +1,18 @@
 import { useState, useEffect } from "react";
 
+function parsePlacedAt(s) {
+  if (!s) return new Date();
+  const hasTimezone = /[Zz]|[+-]\d{2}:?\d{2}$/.test(s);
+  return new Date(hasTimezone ? s : s + "Z");
+}
+
 export function useDishTimer(placedAt, prepTime, playAlert) {
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [isExpired, setIsExpired] = useState(false);
 
   useEffect(() => {
     const update = () => {
-      const elapsed = (Date.now() - new Date(placedAt)) / 1000;
+      const elapsed = (Date.now() - parsePlacedAt(placedAt).getTime()) / 1000;
       const remaining = Math.max(0, prepTime * 60 - elapsed);
 
       setTimeRemaining(remaining);
