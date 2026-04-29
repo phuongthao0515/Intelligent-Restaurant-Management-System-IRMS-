@@ -1,0 +1,350 @@
+
+/* =========================
+   PAGE WRAPPER
+========================= */
+.olp-order-page {
+  display: flex;
+  height: 98vh;
+  background: linear-gradient(135deg, #fff7ed, #fffaf3);
+  font-family: "Segoe UI", sans-serif;
+  overflow: hidden;
+}
+
+/* =========================
+   SIDEBAR (TABLE LIST)
+========================= */
+.olp-table-sidebar {
+  width: 200px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(10px);
+  border-right: 1px solid #f3e0d2;
+  padding: 20px;
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.05);
+}
+
+.olp-table-sidebar h3 {
+  margin: 0 0 15px 0;
+  color: #e65100;
+  font-size: 18px;
+}
+
+.olp-table-tab {
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.25s ease;
+  color: #444;
+  background: #fff;
+  border: 1px solid transparent;
+}
+
+.olp-table-tab:hover {
+  background: #fff3e0;
+  transform: translateX(3px);
+}
+
+.olp-table-tab.active {
+  background: linear-gradient(135deg, #ff9800, #f57c00);
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 6px 14px rgba(255, 152, 0, 0.25);
+}
+
+/* =========================
+   MAIN CONTENT (FIXED LAYOUT)
+========================= */
+.olp-order-content {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+
+  /* 🔥 IMPORTANT FIX */
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* =========================
+   HEADER (NO EXTRA SPACE BUG FIXED)
+========================= */
+.olp-order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #ff9553;
+  margin-top: -20px;
+  padding: 0;
+  height: 60px;
+}
+
+.olp-order-header h2 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 24px;
+}
+
+/* BUTTON */
+.olp-order-header button {
+  background: linear-gradient(135deg, #fde799, #fbbe68);
+  color: black;
+  font-size: medium;
+  border: none;
+  padding: 10px 16px;
+  margin-right: 20px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  box-shadow: 0 6px 14px rgba(255, 152, 0, 0.25);
+  transition: all 0.2s ease;
+}
+
+.olp-order-header button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(255, 152, 0, 0.35);
+}
+
+/* =========================
+   GRID
+========================= */
+.olp-order-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 18px;
+}
+
+/* =========================
+   ORDER CARD (IMPROVED UI)
+========================= */
+.olp-order-card {
+  background: white;
+  border-radius: 18px;
+  padding: 16px;
+
+  border: 1px solid #ffe0b2;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
+
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  transition: all 0.25s ease;
+}
+
+.olp-order-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 35px rgba(255, 152, 0, 0.2);
+}
+
+/* STATUS */
+.olp-order-status {
+  margin-top: 4px;
+  margin-left: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 999px;
+  width: fit-content;
+  text-transform: uppercase;
+}
+
+/* STATUS COLORS */
+.olp-order-card.status-draft .olp-order-status {
+  background: #f3e5f5;
+  color: #6a1b9a;
+}
+
+.olp-order-card.status-placed .olp-order-status {
+  background: #fff3e0;
+  color: #ef6c00;
+}
+
+.olp-order-card.status-in_kitchen .olp-order-status {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.olp-order-card.status-ready .olp-order-status {
+  background: #fff8e1;
+  color: #f9a825;
+}
+
+.olp-order-card.status-served .olp-order-status {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.olp-order-card.status-closed .olp-order-status {
+  background: #e0e0e0;
+  color: #212121;
+}
+
+.olp-order-card.status-cancelled .olp-order-status {
+  background: #eeeeee;
+  color: #757575;
+  text-decoration: line-through;
+}
+
+/* TYPE styling (optional nicer look) */
+.olp-order-type {
+  font-size: 14px;
+  color: #666;
+  background: #fff7cc;
+  padding: 4px 10px;
+  border-radius: 10px;
+  height: fit-content;
+}
+
+/* TOP */
+.olp-order-top {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 600;
+  color: #e65100;
+  font-size: 14px;
+}
+
+/* ITEMS */
+.olp-order-items {
+  font-size: 14px;
+  color: #555;
+  background: white;
+  padding: 10px;
+  border-radius: 12px;
+  line-height: 1.5;
+  border: 1px solid #ffe0b2;
+}
+
+/* =========================
+   ACTION BUTTONS
+========================= */
+.olp-order-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.olp-order-actions button {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 4px;
+  border: none;
+  border-radius: 10px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.olp-order-actions button:hover {
+  transform: scale(1.03);
+}
+
+/* individual buttons */
+.olp-order-actions button:nth-child(1) {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.olp-order-actions button:nth-child(2) {
+  background: #fff3e0;
+  color: #ef6c00;
+}
+
+.olp-cancel-btn {
+  background: #bdbdbd;
+  color: white;
+}
+
+.olp-close-btn {
+  background: #212121;
+  color: white;
+}
+
+.disabled-btn {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none !important;
+  filter: grayscale(70%);
+}
+
+/* =========================
+   OVERLAY (FIXED & CLEAN)
+========================= */
+.olp-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  backdrop-filter: blur(6px);
+}
+
+.olp-overlay-content {
+  width: 540px;
+  max-height: 80vh;
+  background: white;
+  border-radius: 18px;
+  padding: 22px;
+
+  overflow-y: auto;
+
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+  animation: pop 0.2s ease;
+}
+
+/* animation */
+@keyframes pop {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.olp-overlay-content h3 {
+  margin: 0 0 10px 0;
+  color: #e65100;
+}
+
+/* ITEM DETAIL */
+.olp-overlay-item-detail {
+  background: #fff8f0;
+  padding: 12px;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  border: 1px solid #ffe0b2;
+}
+
+.olp-overlay-item-detail p {
+  margin: 4px 0;
+  font-size: 0.9rem;
+}
+
+/* CLOSE BUTTON */
+.olp-overlay-content button {
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #ff9800, #f57c00);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.olp-overlay-content button:hover {
+  transform: translateY(-2px);
+}
