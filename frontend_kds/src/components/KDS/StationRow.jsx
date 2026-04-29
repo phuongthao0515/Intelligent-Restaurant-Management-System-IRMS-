@@ -16,13 +16,17 @@ export default function StationRow({ station, tickets, menuItems }) {
       <StationHeader name={station.name} />
 
       <div className="dish-list">
-        {dishes.map((dish) => (
-          <DishCard
-            key={dish.id}
-            dish={dish}
-            menuItems={menuItems}
-          />
-        ))}
+        {dishes.length > 0 ? (
+          dishes.map((dish) => (
+            <DishCard
+              key={dish.id}
+              dish={dish}
+              menuItems={menuItems}
+            />
+          ))
+        ) : (
+          <div className="empty-station">No active tickets</div>
+        )}
       </div>
     </div>
   );
