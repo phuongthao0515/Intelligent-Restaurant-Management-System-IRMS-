@@ -8,6 +8,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database import BaseModel
 
 if TYPE_CHECKING:
+    from app.models.order import Order
     from app.models.reservation import Reservation
 
 
@@ -18,3 +19,4 @@ class Customer(BaseModel):
     phone_number: Mapped[str] = mapped_column(String(20), nullable=False, unique=True)
 
     reservations: Mapped[list["Reservation"]] = relationship(back_populates="customer")
+    orders: Mapped[list["Order"]] = relationship(back_populates="customer")

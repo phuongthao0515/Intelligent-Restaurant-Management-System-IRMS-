@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 import uuid
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
-from sqlalchemy import Enum, ForeignKey, Index, Text
-from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+from sqlalchemy import Enum, ForeignKey, Index
+from sqlalchemy.dialects.postgresql import JSONB, UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import BaseModel
-from app.models.enums import OrderEventType
+from app.models.enums import EventType
 
 if TYPE_CHECKING:
     from app.models.order import Order, OrderItem
@@ -36,10 +36,12 @@ class OrderEvent(BaseModel):
         ForeignKey("staff.id", ondelete="SET NULL"),
         nullable=True,
     )
-    event_type: Mapped[OrderEventType] = mapped_column(
-        Enum(OrderEventType, name="order_event_type"), nullable=False
+    event_type: Mapped[EventType] = mapped_column(
+        Enum(EventType, name="event_type"), nullable=False
     )
-    payload: Mapped[str | None] = mapped_column(Text, nullable=True)
+    payload: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False, default=dict
+    )
 
     order: Mapped["Order"] = relationship(back_populates="events")
     order_item: Mapped["OrderItem | None"] = relationship(back_populates="events")
