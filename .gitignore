@@ -8,6 +8,7 @@ __pycache__/
 venv/
 env/
 
+
 # Build / packaging
 build/
 dist/
@@ -23,6 +24,7 @@ htmlcov/
 # Environment variables
 .env
 .env.*
+!.env.example
 
 # IDE / editor
 .vscode/

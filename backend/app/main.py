@@ -6,8 +6,10 @@ from contextlib import asynccontextmanager
 
 import structlog
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app import models  # noqa: F401
+from app.config import get_settings
 from app.database import init_db
 from app.modules.kds.router import router as kds_router
 from app.modules.ordering.router import router as ordering_router
@@ -26,12 +28,16 @@ def _configure_logging() -> None:
 
 _configure_logging()
 logger = structlog.get_logger(__name__)
+settings = get_settings()
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
-    await init_db()
-    logger.info("api.startup.complete")
+    try:
+        await init_db()
+        logger.info("api.startup.complete")
+    except Exception as e:
+        logger.error("api.startup.failed", error=str(e))
     yield
 
 
@@ -40,6 +46,14 @@ app = FastAPI(
     version="0.1.0",
     description="Backend for Ordering and KDS modules.",
     lifespan=lifespan,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 app.include_router(ordering_router, prefix="/api/v1")
