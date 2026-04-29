@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   getOrders,
+  getOrderById,
   closeOrder,
   cancelOrder,
 } from "../utils/orderDB";
@@ -35,6 +36,11 @@ function OrderListPage() {
   const refresh = async () => {
     setOrders(await getOrders());
     setTables(getListTables());
+  };
+
+  const handleViewOrder = async (order) => {
+    const fresh = await getOrderById(order.id);
+    setViewOrder(fresh || order);
   };
 
   const handleCancel = async (order) => {
@@ -129,7 +135,7 @@ function OrderListPage() {
                 </div>
 
                 <div className="olp-order-actions">
-                  <button onClick={() => setViewOrder(order)}>
+                  <button onClick={() => handleViewOrder(order)}>
                     View
                   </button>
 
