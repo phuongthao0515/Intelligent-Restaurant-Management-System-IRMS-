@@ -16,11 +16,11 @@ if TYPE_CHECKING:
 class RestaurantTable(BaseModel):
     __tablename__ = "restaurant_table"
     __table_args__ = (
-        CheckConstraint("capacity > 0", name="ck_restaurant_table_capacity_positive"),
+        CheckConstraint("seats > 0", name="ck_restaurant_table_seats_positive"),
     )
 
-    table_number: Mapped[int] = mapped_column(Integer, nullable=False, unique=True)
-    capacity: Mapped[int] = mapped_column(Integer, nullable=False)
+    number: Mapped[int] = mapped_column(Integer, nullable=False, unique=True)
+    seats: Mapped[int] = mapped_column(Integer, nullable=False)
     status: Mapped[TableStatus] = mapped_column(
         Enum(TableStatus, name="table_status"),
         nullable=False,
