@@ -27,11 +27,6 @@ class OrderStatus(str, Enum):
     CANCELLED = "CANCELLED"
 
 
-class OrderType(str, Enum):
-    DINE_IN = "DINE_IN"
-    TAKEAWAY = "TAKEAWAY"
-
-
 class ItemStatus(str, Enum):
     QUEUED = "QUEUED"
     PREPARING = "PREPARING"
@@ -79,6 +74,7 @@ class MenuItem(BaseModel):
     station_id: UUID
     prep_time_min: int | None = None
     is_available: bool = True
+    is_combo: bool = False
     customization_schema: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -90,6 +86,7 @@ class MenuItemCreate(BaseModel):
     station_id: UUID
     prep_time_min: int | None = None
     is_available: bool = True
+    is_combo: bool = False
     customization_schema: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -100,6 +97,7 @@ class MenuItemUpdate(BaseModel):
     category_id: UUID | None = None
     station_id: UUID | None = None
     prep_time_min: int | None = None
+    is_combo: bool | None = None
     customization_schema: dict[str, Any] | None = None
 
 
@@ -141,7 +139,6 @@ class Order(BaseModel):
     id: UUID
     table_id: UUID
     customer_id: UUID | None = None
-    type: OrderType
     status: OrderStatus
     subtotal: Money = Decimal("0.00")
     items: list[OrderItem] = Field(default_factory=list)
@@ -154,7 +151,6 @@ class Order(BaseModel):
 class OrderCreate(BaseModel):
     table_id: UUID
     customer_id: UUID | None = None
-    type: OrderType
 
 
 class Station(BaseModel):
