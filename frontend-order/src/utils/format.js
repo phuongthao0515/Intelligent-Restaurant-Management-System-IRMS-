@@ -1,2 +1,1 @@
-export const formatVND = (value) =>
-  Number(value).toLocaleString("vi-VN") + "₫";
+export const formatUSD = (value) => "$" + Number(value).toFixed(2);
