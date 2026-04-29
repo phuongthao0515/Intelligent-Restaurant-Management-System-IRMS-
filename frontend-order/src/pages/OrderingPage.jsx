@@ -4,6 +4,8 @@ import MenuList from "../components/Menu/MenuList";
 import OrderPanel from "../components/Order/OrderPanel";
 import { getOrderById } from "../utils/orderDB";
 import "./OrderingPage.css";
+import { initMenu } from "../utils/menuDB";
+import { initTables } from "../utils/tableDB";
 
 function OrderingPage() {
   const navigate = useNavigate();
@@ -12,19 +14,31 @@ function OrderingPage() {
   const editId = searchParams.get("edit");
   const tableId = searchParams.get("tableId");
 
-  const [selectedCategory, setSelectedCategory] = useState("c1");
+  const [ready, setReady] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedItemId, setSelectedItemId] = useState(null);
   const [editingOrder, setEditingOrder] = useState(null);
 
   useEffect(() => {
-    if (editId) {
-      const order = getOrderById(editId);
-      if (order) {
-        setEditingOrder(order);
+    (async () => {
+      await Promise.all([initMenu(), initTables()]);
+
+      if (editId) {
+        const order = await getOrderById(editId);
+        if (order) setEditingOrder(order);
       }
-    }
+
+      setReady(true);
+    })();
   }, [editId]);
 
+  if (!ready) {
+    return (
+      <div className="app-container">
+        <p>Loading...</p>
+      </div>
+    );
+  }
   const handleSelectItem = (item) => {
     setSelectedCategory(item.category_id);
     setSelectedItemId(item.id);
