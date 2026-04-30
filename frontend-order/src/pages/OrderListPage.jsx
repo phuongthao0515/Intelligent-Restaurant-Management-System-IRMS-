@@ -7,6 +7,7 @@ import {
 } from "../utils/orderDB";
 import { initTables, getListTables } from "../utils/tableDB";
 import { initMenu, getItemById } from "../utils/menuDB";
+import { formatICT } from "../utils/format";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import "./OrderListPage.css";
 
@@ -93,6 +94,9 @@ function OrderListPage() {
 
         <div className="olp-order-header">
           <h2>📋 Orders</h2>
+          <button onClick={() => navigate("/")}>
+            🏠 Welcome Page
+          </button>
           <button
             onClick={() =>
               selectedTable && navigate(`/create-order?tableId=${selectedTable}`)
@@ -152,15 +156,6 @@ function OrderListPage() {
                     Modify
                   </button>
 
-                  {["PLACED", "IN_KITCHEN", "READY", "SERVED"].includes(order.status) && (
-                    <button
-                      className="olp-add-more-btn"
-                      onClick={() => navigate(`/create-order?tableId=${order.table_id}`)}
-                    >
-                      Add More
-                    </button>
-                  )}
-
                   <button
                     disabled={finished}
                     className={`olp-cancel-btn ${finished ? "disabled-btn" : ""}`}
@@ -195,10 +190,10 @@ function OrderListPage() {
             <p><b>ID:</b> {viewOrder.id}</p>
             <p><b>Table:</b> {viewOrder.table_id}</p>
             <p><b>Status:</b> {viewOrder.status}</p>
-            <p><b>Created At:</b> {viewOrder.created_at}</p>
-            <p><b>Placed At:</b> {viewOrder.placed_at || "Not placed"}</p>
-            <p><b>Ready At:</b> {viewOrder.ready_at || "Not ready"}</p>
-            <p><b>Served At:</b> {viewOrder.served_at || "Not served"}</p>
+            <p><b>Created At:</b> {formatICT(viewOrder.created_at)}</p>
+            <p><b>Placed At:</b> {viewOrder.placed_at ? formatICT(viewOrder.placed_at) : "Not placed"}</p>
+            <p><b>Ready At:</b> {viewOrder.ready_at ? formatICT(viewOrder.ready_at) : "Not ready"}</p>
+            <p><b>Served At:</b> {viewOrder.served_at ? formatICT(viewOrder.served_at) : "Not served"}</p>
             <hr />
 
             {viewOrder.items.map((item, idx) => {
@@ -222,8 +217,8 @@ function OrderListPage() {
                       </ul>
                     </div>
                   )}
-                  <p><b>Started At:</b> {item.started_at || "Not started"}</p>
-                  <p><b>Ready At:</b> {item.ready_at || "Not ready"}</p>
+                  <p><b>Started At:</b> {item.started_at ? formatICT(item.started_at) : "Not started"}</p>
+                  <p><b>Ready At:</b> {item.ready_at ? formatICT(item.ready_at) : "Not ready"}</p>
                 </div>
               );
             })}
