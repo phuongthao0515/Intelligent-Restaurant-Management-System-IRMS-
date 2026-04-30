@@ -21,6 +21,7 @@ function OrderListPage() {
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
+    let interval;
     (async () => {
       await Promise.all([initTables(), initMenu()]);
       const tableData = getListTables();
@@ -31,7 +32,12 @@ function OrderListPage() {
 
       const data = await getOrders();
       setOrders(data);
+
+      interval = setInterval(async () => {
+        setOrders(await getOrders());
+      }, 5000);
     })();
+    return () => interval && clearInterval(interval);
   }, []);
 
   const refresh = async () => {
