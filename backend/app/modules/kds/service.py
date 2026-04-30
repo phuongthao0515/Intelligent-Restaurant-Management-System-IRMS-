@@ -6,20 +6,18 @@ from uuid import UUID
 from fastapi import HTTPException, status
 
 from app.modules.kds.repositories import StationRepository
-from app.modules.ordering.repositories import OrderRepository, TableRepository
+from app.modules.ordering.services.order_service import OrderService
+from app.modules.table.services.table_service import TableService
 from app.shared.models import (
-    EventType,
     ItemStatus,
     ItemStatusUpdate,
     KitchenTicket,
     Order,
     OrderEvent,
     OrderItem,
-    OrderStatus,
     RecallOrderRequest,
     Station,
     StationCreate,
-    utc_now,
 )
 
 
@@ -27,8 +25,8 @@ class KdsService:
     def __init__(
         self,
         stations: StationRepository,
-        orders: OrderRepository,
-        tables: TableRepository,
+        orders: OrderService,
+        tables: TableService,
     ):
         self._stations = stations
         self._orders = orders
@@ -63,12 +61,16 @@ class KdsService:
                 items = [item for item in items if item.status.value == status_filter]
             if not items:
                 continue
-            table = await self._tables.get_table(order.table_id)
+            try:
+                table = await self._tables.get_table(order.table_id)
+                table_number = table.number
+            except HTTPException:
+                table_number = 0
             tickets.append(
                 KitchenTicket(
                     order_id=order.id,
                     station_id=station_id,
-                    table_number=table.number if table else 0,
+                    table_number=table_number,
                     placed_at=order.placed_at,
                     items=items,
                 )
@@ -78,64 +80,18 @@ class KdsService:
     async def update_order_item_status(
         self, order_item_id: UUID, payload: ItemStatusUpdate
     ) -> OrderItem:
-        orders = await self._orders.list_orders()
-        for order in orders:
-            for index, item in enumerate(order.items):
-                if item.id != order_item_id:
-                    continue
-                changed_at = utc_now()
-                updated_item = item.model_copy(update={"status": payload.new_status})
-                if payload.new_status == ItemStatus.PREPARING:
-                    updated_item = updated_item.model_copy(
-                        update={"started_at": changed_at}
-                    )
-                if payload.new_status == ItemStatus.READY:
-                    updated_item = updated_item.model_copy(
-                        update={"ready_at": changed_at}
-                    )
-                items = list(order.items)
-                items[index] = updated_item
-                updated_order = order.model_copy(update={"items": items})
+        updated_item = await self._orders.update_item_status(
+            order_item_id, payload.new_status, payload.reason
+        )
 
-                auto_promoted = False
-                if all(current.status == ItemStatus.READY for current in items):
-                    updated_order = updated_order.model_copy(
-                        update={"status": OrderStatus.READY, "ready_at": changed_at}
-                    )
-                    auto_promoted = True
-                elif (
-                    order.status in {OrderStatus.PLACED, OrderStatus.IN_KITCHEN}
-                    and any(
-                        current.status in {ItemStatus.QUEUED, ItemStatus.PREPARING}
-                        for current in items
-                    )
-                ):
-                    updated_order = updated_order.model_copy(
-                        update={"status": OrderStatus.IN_KITCHEN}
-                    )
+        if payload.new_status == ItemStatus.READY:
+            order = await self._orders.get_order(updated_item.order_id)
+            if order.items and all(
+                item.status == ItemStatus.READY for item in order.items
+            ):
+                await self._orders.transition_order_to_ready(order.id)
 
-                await self._orders.save_order(updated_order)
-                await self._orders.add_event(
-                    updated_order.id,
-                    EventType.STATUS_CHANGED,
-                    order_item_id=order_item_id,
-                    payload={
-                        "new_status": payload.new_status.value,
-                        "reason": payload.reason,
-                    },
-                )
-                if auto_promoted:
-                    await self._orders.add_event(
-                        updated_order.id,
-                        EventType.STATUS_CHANGED,
-                        payload={
-                            "new_status": OrderStatus.READY.value,
-                            "auto_promoted": True,
-                        },
-                    )
-                return updated_item
-
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Order item not found")
+        return updated_item
 
     async def bump_order_item(self, order_item_id: UUID) -> OrderItem:
         return await self.update_order_item_status(
@@ -145,34 +101,9 @@ class KdsService:
     async def recall_order(
         self, order_id: UUID, payload: RecallOrderRequest | None = None
     ) -> Order:
-        order = await self._orders.get_order(order_id)
-        if order is None:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "Order not found")
-
-        reset_items = [
-            item.model_copy(
-                update={
-                    "status": ItemStatus.QUEUED,
-                    "started_at": None,
-                    "ready_at": None,
-                }
-            )
-            for item in order.items
-        ]
-        updated = order.model_copy(
-            update={
-                "status": OrderStatus.IN_KITCHEN,
-                "ready_at": None,
-                "items": reset_items,
-            }
+        return await self._orders.recall_order(
+            order_id, payload.reason if payload else None
         )
-        await self._orders.save_order(updated)
-        await self._orders.add_event(
-            order_id,
-            EventType.RECALLED,
-            payload={"reason": payload.reason if payload else None},
-        )
-        return updated
 
     async def list_events(
         self, order_id: UUID | None = None, since: str | None = None

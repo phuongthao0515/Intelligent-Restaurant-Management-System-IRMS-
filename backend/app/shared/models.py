@@ -9,10 +9,10 @@ from uuid import UUID
 from pydantic import BaseModel, Field
 
 
-ICT = timezone(timedelta(hours=7))
+ICT = timezone(timedelta(hours=7), name="ICT")
 
 
-def utc_now() -> datetime:
+def now_ict() -> datetime:
     return datetime.now(ICT)
 
 
@@ -127,13 +127,13 @@ class OrderItem(BaseModel):
 
 class OrderItemCreate(BaseModel):
     menu_item_id: UUID
-    quantity: int
+    quantity: int = Field(gt=0)
     customizations: Customizations = Field(default_factory=dict)
     allergy_notes: str | None = None
 
 
 class OrderItemUpdate(BaseModel):
-    quantity: int | None = None
+    quantity: int | None = Field(default=None, gt=0)
     customizations: Customizations | None = None
     allergy_notes: str | None = None
 
@@ -205,4 +205,4 @@ class RecallOrderRequest(BaseModel):
 class WsEnvelope(BaseModel):
     type: str
     data: dict[str, Any] = Field(default_factory=dict)
-    ts: datetime = Field(default_factory=utc_now)
+    ts: datetime = Field(default_factory=now_ict)
