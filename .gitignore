@@ -41,9 +41,8 @@ Thumbs.db
 *.sqlite3
 *.db
 
-# Binary docs in docs/ (keep markdown/yaml)
-docs/*.docx
-docs/*.pdf
+# Docs (local-only; not tracked in git)
+docs/
 
 # Local report notes
 SOLID.md

@@ -1,63 +1,17 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
+from datetime import datetime
 from uuid import UUID, uuid4
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.enums import TableStatus
-from app.models.menu_category import MenuCategory as MenuCategoryORM
-from app.models.menu_item import MenuItem as MenuItemORM
 from app.models.order import Order as OrderORM
 from app.models.order import OrderItem as OrderItemORM
 from app.models.order_event import OrderEvent as OrderEventORM
-from app.models.restaurant_table import RestaurantTable as RestaurantTableORM
-from app.shared.models import (
-    EventType,
-    MenuCategory,
-    MenuItem,
-    Order,
-    OrderEvent,
-    OrderItem,
-    Table,
-)
-
-
-# ---------------------------------------------------------------------------
-# Private DTO converters: ORM -> Pydantic
-# Repositories return Pydantic at the boundary so services never touch ORM.
-# ---------------------------------------------------------------------------
-def _table_to_dto(orm: RestaurantTableORM) -> Table:
-    return Table(
-        id=orm.id,
-        number=orm.number,
-        seats=orm.seats,
-        is_occupied=(orm.status == TableStatus.OCCUPIED),
-    )
-
-
-def _menu_category_to_dto(orm: MenuCategoryORM) -> MenuCategory:
-    return MenuCategory(
-        id=orm.id,
-        name=orm.name,
-        display_order=orm.display_order,
-    )
-
-
-def _menu_item_to_dto(orm: MenuItemORM) -> MenuItem:
-    return MenuItem(
-        id=orm.id,
-        name=orm.name,
-        description=orm.description,
-        price=orm.price,
-        category_id=orm.category_id,
-        station_id=orm.station_id,
-        prep_time_min=orm.prep_time_min,
-        is_available=orm.is_available,
-        is_combo=orm.is_combo,
-        customization_schema=orm.customization_schema or {},
-    )
+from app.shared.models import EventType, Order, OrderEvent, OrderItem, OrderStatus
 
 
 def _order_item_to_dto(orm: OrderItemORM) -> OrderItem:
@@ -103,108 +57,15 @@ def _order_event_to_dto(orm: OrderEventORM) -> OrderEvent:
     )
 
 
-# ---------------------------------------------------------------------------
-# Concrete adapters
-# ---------------------------------------------------------------------------
-class SqlAlchemyTableRepository:
-    def __init__(self, session: AsyncSession) -> None:
-        self._session = session
-
-    async def list_tables(self) -> list[Table]:
-        result = await self._session.execute(select(RestaurantTableORM))
-        return [_table_to_dto(t) for t in result.scalars().all()]
-
-    async def get_table(self, table_id: UUID) -> Table | None:
-        result = await self._session.execute(
-            select(RestaurantTableORM).where(RestaurantTableORM.id == table_id)
-        )
-        orm = result.scalar_one_or_none()
-        return _table_to_dto(orm) if orm else None
-
-
-class SqlAlchemyMenuRepository:
-    def __init__(self, session: AsyncSession) -> None:
-        self._session = session
-
-    async def list_categories(self) -> list[MenuCategory]:
-        result = await self._session.execute(select(MenuCategoryORM))
-        return [_menu_category_to_dto(c) for c in result.scalars().all()]
-
-    async def get_category(self, category_id: UUID) -> MenuCategory | None:
-        result = await self._session.execute(
-            select(MenuCategoryORM).where(MenuCategoryORM.id == category_id)
-        )
-        orm = result.scalar_one_or_none()
-        return _menu_category_to_dto(orm) if orm else None
-
-    async def save_category(self, category: MenuCategory) -> None:
-        result = await self._session.execute(
-            select(MenuCategoryORM).where(MenuCategoryORM.id == category.id)
-        )
-        orm = result.scalar_one_or_none()
-        if orm is None:
-            orm = MenuCategoryORM(
-                id=category.id,
-                name=category.name,
-                display_order=category.display_order,
-            )
-            self._session.add(orm)
-        else:
-            orm.name = category.name
-            orm.display_order = category.display_order
-        await self._session.flush()
-
-    async def list_items(self) -> list[MenuItem]:
-        result = await self._session.execute(select(MenuItemORM))
-        return [_menu_item_to_dto(i) for i in result.scalars().all()]
-
-    async def get_item(self, item_id: UUID) -> MenuItem | None:
-        result = await self._session.execute(
-            select(MenuItemORM).where(MenuItemORM.id == item_id)
-        )
-        orm = result.scalar_one_or_none()
-        return _menu_item_to_dto(orm) if orm else None
-
-    async def save_item(self, item: MenuItem) -> None:
-        result = await self._session.execute(
-            select(MenuItemORM).where(MenuItemORM.id == item.id)
-        )
-        orm = result.scalar_one_or_none()
-        if orm is None:
-            orm = MenuItemORM(
-                id=item.id,
-                name=item.name,
-                description=item.description,
-                price=item.price,
-                category_id=item.category_id,
-                station_id=item.station_id,
-                prep_time_min=item.prep_time_min if item.prep_time_min is not None else 10,
-                is_available=item.is_available,
-                is_combo=item.is_combo,
-                customization_schema=item.customization_schema or {},
-            )
-            self._session.add(orm)
-        else:
-            orm.name = item.name
-            orm.description = item.description
-            orm.price = item.price
-            orm.category_id = item.category_id
-            orm.station_id = item.station_id
-            if item.prep_time_min is not None:
-                orm.prep_time_min = item.prep_time_min
-            orm.is_available = item.is_available
-            orm.is_combo = item.is_combo
-            orm.customization_schema = item.customization_schema or {}
-        await self._session.flush()
-
-
 class SqlAlchemyOrderRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
     async def list_orders(self) -> list[Order]:
         result = await self._session.execute(
-            select(OrderORM).options(selectinload(OrderORM.items))
+            select(OrderORM)
+            .options(selectinload(OrderORM.items))
+            .order_by(OrderORM.created_at.desc())
         )
         return [_order_to_dto(o) for o in result.scalars().all()]
 
@@ -217,8 +78,20 @@ class SqlAlchemyOrderRepository:
         orm = result.scalar_one_or_none()
         return _order_to_dto(orm) if orm else None
 
+    async def list_active_table_ids(
+        self, active_statuses: Iterable[OrderStatus]
+    ) -> set[UUID]:
+        statuses = list(active_statuses)
+        if not statuses:
+            return set()
+        result = await self._session.execute(
+            select(OrderORM.table_id)
+            .where(OrderORM.status.in_(statuses))
+            .distinct()
+        )
+        return {row for row in result.scalars().all()}
+
     async def save_order(self, order: Order) -> None:
-        # Upsert: fetch (with items eagerly loaded), then add or update.
         result = await self._session.execute(
             select(OrderORM)
             .where(OrderORM.id == order.id)
@@ -227,7 +100,6 @@ class SqlAlchemyOrderRepository:
         orm = result.scalar_one_or_none()
 
         if orm is None:
-            # CREATE
             orm = OrderORM(
                 id=order.id,
                 table_id=order.table_id,
@@ -242,7 +114,6 @@ class SqlAlchemyOrderRepository:
                 orm.created_at = order.created_at
             self._session.add(orm)
         else:
-            # UPDATE: do not touch created_at (immutable after creation)
             orm.table_id = order.table_id
             orm.customer_id = order.customer_id
             orm.status = order.status
@@ -314,8 +185,13 @@ class SqlAlchemyOrderRepository:
         stmt = select(OrderEventORM).order_by(OrderEventORM.created_at)
         if order_id is not None:
             stmt = stmt.where(OrderEventORM.order_id == order_id)
+        if since:
+            try:
+                since_dt = datetime.fromisoformat(since)
+            except ValueError as exc:
+                raise ValueError(
+                    f"`since` must be ISO-8601 datetime, got {since!r}"
+                ) from exc
+            stmt = stmt.where(OrderEventORM.created_at >= since_dt)
         result = await self._session.execute(stmt)
-        events = [_order_event_to_dto(e) for e in result.scalars()]
-        if since is not None:
-            events = [e for e in events if e.created_at.isoformat() >= since]
-        return events
+        return [_order_event_to_dto(e) for e in result.scalars()]
