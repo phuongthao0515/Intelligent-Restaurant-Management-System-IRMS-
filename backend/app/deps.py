@@ -11,17 +11,21 @@ from app.modules.kds.repositories import (
     StationRepository,
 )
 from app.modules.kds.service import KdsService
-from app.modules.ordering.repositories import (
+from app.modules.menu.repositories import (
     MenuRepository,
-    OrderRepository,
     SqlAlchemyMenuRepository,
+)
+from app.modules.menu.services.menu_service import MenuService
+from app.modules.ordering.repositories import (
+    OrderRepository,
     SqlAlchemyOrderRepository,
+)
+from app.modules.ordering.services.order_service import OrderService
+from app.modules.table.repositories import (
     SqlAlchemyTableRepository,
     TableRepository,
 )
-from app.modules.ordering.services.menu_service import MenuService
-from app.modules.ordering.services.order_service import OrderService
-from app.modules.ordering.services.table_service import TableService
+from app.modules.table.services.table_service import TableService
 
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
@@ -66,21 +70,22 @@ def get_menu_service(
 
 def get_table_service(
     tables: TableRepository = Depends(get_table_repository),
+    orders: OrderRepository = Depends(get_order_repository),
 ) -> TableService:
-    return TableService(tables)
+    return TableService(tables, orders)
 
 
 def get_order_service(
     orders: OrderRepository = Depends(get_order_repository),
-    menus: MenuRepository = Depends(get_menu_repository),
-    tables: TableRepository = Depends(get_table_repository),
+    menus: MenuService = Depends(get_menu_service),
+    tables: TableService = Depends(get_table_service),
 ) -> OrderService:
     return OrderService(orders=orders, menus=menus, tables=tables)
 
 
 def get_kds_service(
     stations: StationRepository = Depends(get_station_repository),
-    orders: OrderRepository = Depends(get_order_repository),
-    tables: TableRepository = Depends(get_table_repository),
+    orders: OrderService = Depends(get_order_service),
+    tables: TableService = Depends(get_table_service),
 ) -> KdsService:
     return KdsService(stations=stations, orders=orders, tables=tables)

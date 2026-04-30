@@ -1,19 +1,7 @@
-from app.modules.ordering.repositories.protocols import (
-    MenuRepository,
-    OrderRepository,
-    TableRepository,
-)
-from app.modules.ordering.repositories.sqlalchemy import (
-    SqlAlchemyMenuRepository,
-    SqlAlchemyOrderRepository,
-    SqlAlchemyTableRepository,
-)
+from app.modules.ordering.repositories.protocols import OrderRepository
+from app.modules.ordering.repositories.sqlalchemy import SqlAlchemyOrderRepository
 
 __all__ = [
-    "MenuRepository",
     "OrderRepository",
-    "TableRepository",
-    "SqlAlchemyMenuRepository",
     "SqlAlchemyOrderRepository",
-    "SqlAlchemyTableRepository",
 ]

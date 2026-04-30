@@ -5,7 +5,7 @@ from uuid import UUID
 
 from fastapi import HTTPException, status
 
-from app.modules.ordering.repositories import MenuRepository
+from app.modules.menu.repositories import MenuRepository
 from app.shared.models import (
     ItemAvailabilityUpdate,
     MenuCategory,

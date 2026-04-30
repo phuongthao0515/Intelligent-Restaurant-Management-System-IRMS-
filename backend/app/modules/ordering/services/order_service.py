@@ -6,22 +6,21 @@ from uuid import UUID
 
 from fastapi import HTTPException, status
 
-from app.modules.ordering.repositories import (
-    MenuRepository,
-    OrderRepository,
-    TableRepository,
-)
+from app.modules.menu.services.menu_service import MenuService
+from app.modules.ordering.repositories import OrderRepository
+from app.modules.table.services.table_service import TableService
 from app.shared.domain_events import ORDER_CANCELLED, ORDER_PLACED, ORDER_SERVED
 from app.shared.models import (
     EventType,
     ItemStatus,
     Order,
     OrderCreate,
+    OrderEvent,
     OrderItem,
     OrderItemCreate,
     OrderItemUpdate,
     OrderStatus,
-    utc_now,
+    now_ict,
 )
 
 
@@ -29,8 +28,8 @@ class OrderService:
     def __init__(
         self,
         orders: OrderRepository,
-        menus: MenuRepository,
-        tables: TableRepository,
+        menus: MenuService,
+        tables: TableService,
     ):
         self._orders = orders
         self._menus = menus
@@ -49,14 +48,13 @@ class OrderService:
         return orders
 
     async def create_order(self, payload: OrderCreate) -> Order:
-        if await self._tables.get_table(payload.table_id) is None:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "Table not found")
+        await self._tables.get_table(payload.table_id)
         order = Order(
             id=uuid.uuid4(),
             table_id=payload.table_id,
             customer_id=payload.customer_id,
             status=OrderStatus.DRAFT,
-            created_at=utc_now(),
+            created_at=now_ict(),
         )
         await self._orders.save_order(order)
         return order
@@ -74,9 +72,7 @@ class OrderService:
                 status.HTTP_409_CONFLICT, "Only draft orders are editable"
             )
 
-        menu_item = await self._menus.get_item(payload.menu_item_id)
-        if menu_item is None:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "Menu item not found")
+        menu_item = await self._menus.get_menu_item(payload.menu_item_id)
         if not menu_item.is_available:
             raise HTTPException(status.HTTP_409_CONFLICT, "Menu item is unavailable")
 
@@ -152,7 +148,7 @@ class OrderService:
                 status.HTTP_409_CONFLICT, "Only draft orders can be submitted"
             )
         updated = order.model_copy(
-            update={"status": OrderStatus.PLACED, "placed_at": utc_now()}
+            update={"status": OrderStatus.PLACED, "placed_at": now_ict()}
         )
         await self._orders.save_order(updated)
         await self._orders.add_event(
@@ -210,7 +206,7 @@ class OrderService:
         updated = order.model_copy(
             update={
                 "status": OrderStatus.SERVED,
-                "served_at": utc_now(),
+                "served_at": now_ict(),
                 "items": served_items,
             }
         )
@@ -237,3 +233,130 @@ class OrderService:
         updated = order.model_copy(update={"status": OrderStatus.CLOSED})
         await self._orders.save_order(updated)
         return updated
+
+    async def update_item_status(
+        self,
+        order_item_id: UUID,
+        new_status: ItemStatus,
+        reason: str | None = None,
+    ) -> OrderItem:
+        orders = await self._orders.list_orders()
+        for order in orders:
+            for index, item in enumerate(order.items):
+                if item.id != order_item_id:
+                    continue
+                if order.status in {
+                    OrderStatus.DRAFT,
+                    OrderStatus.SERVED,
+                    OrderStatus.CLOSED,
+                    OrderStatus.CANCELLED,
+                }:
+                    raise HTTPException(
+                        status.HTTP_409_CONFLICT,
+                        "Order is not in a state that allows item updates",
+                    )
+                changed_at = now_ict()
+                updated_item = item.model_copy(update={"status": new_status})
+                if new_status == ItemStatus.PREPARING:
+                    updated_item = updated_item.model_copy(
+                        update={"started_at": changed_at}
+                    )
+                if new_status == ItemStatus.READY:
+                    updated_item = updated_item.model_copy(
+                        update={"ready_at": changed_at}
+                    )
+                items = list(order.items)
+                items[index] = updated_item
+                updated_order = order.model_copy(update={"items": items})
+
+                if (
+                    order.status in {OrderStatus.PLACED, OrderStatus.IN_KITCHEN}
+                    and any(
+                        current.status in {ItemStatus.QUEUED, ItemStatus.PREPARING}
+                        for current in items
+                    )
+                ):
+                    updated_order = updated_order.model_copy(
+                        update={"status": OrderStatus.IN_KITCHEN}
+                    )
+
+                await self._orders.save_order(updated_order)
+                await self._orders.add_event(
+                    updated_order.id,
+                    EventType.STATUS_CHANGED,
+                    order_item_id=order_item_id,
+                    payload={
+                        "new_status": new_status.value,
+                        "reason": reason,
+                    },
+                )
+                return updated_item
+
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Order item not found")
+
+    async def transition_order_to_ready(self, order_id: UUID) -> Order:
+        order = await self.get_order(order_id)
+        if order.status == OrderStatus.READY:
+            return order
+        if order.status not in {OrderStatus.PLACED, OrderStatus.IN_KITCHEN}:
+            raise HTTPException(
+                status.HTTP_409_CONFLICT,
+                "Order cannot transition to ready from its current state",
+            )
+        changed_at = now_ict()
+        updated = order.model_copy(
+            update={"status": OrderStatus.READY, "ready_at": changed_at}
+        )
+        await self._orders.save_order(updated)
+        await self._orders.add_event(
+            order_id,
+            EventType.STATUS_CHANGED,
+            payload={
+                "new_status": OrderStatus.READY.value,
+                "auto_promoted": True,
+            },
+        )
+        return updated
+
+    async def recall_order(
+        self, order_id: UUID, reason: str | None = None
+    ) -> Order:
+        order = await self.get_order(order_id)
+        if order.status not in {
+            OrderStatus.PLACED,
+            OrderStatus.IN_KITCHEN,
+            OrderStatus.READY,
+        }:
+            raise HTTPException(
+                status.HTTP_409_CONFLICT,
+                "Only placed, in-kitchen, or ready orders can be recalled",
+            )
+        reset_items = [
+            item.model_copy(
+                update={
+                    "status": ItemStatus.QUEUED,
+                    "started_at": None,
+                    "ready_at": None,
+                }
+            )
+            for item in order.items
+        ]
+        updated = order.model_copy(
+            update={
+                "status": OrderStatus.IN_KITCHEN,
+                "ready_at": None,
+                "items": reset_items,
+            }
+        )
+        await self._orders.save_order(updated)
+        await self._orders.add_event(
+            order_id,
+            EventType.RECALLED,
+            payload={"reason": reason},
+        )
+        return updated
+
+    async def list_events(
+        self, order_id: UUID | None = None, since: str | None = None
+    ) -> list[OrderEvent]:
+        return await self._orders.list_events(order_id=order_id, since=since)
