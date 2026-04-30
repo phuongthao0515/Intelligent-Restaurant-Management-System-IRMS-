@@ -12,7 +12,9 @@ from app import models  # noqa: F401
 from app.config import get_settings
 from app.database import init_db
 from app.modules.kds.router import router as kds_router
+from app.modules.menu.router import router as menu_router
 from app.modules.ordering.router import router as ordering_router
+from app.modules.table.router import router as table_router
 
 
 def _configure_logging() -> None:
@@ -56,6 +58,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(menu_router, prefix="/api/v1")
+app.include_router(table_router, prefix="/api/v1")
 app.include_router(ordering_router, prefix="/api/v1")
 app.include_router(kds_router, prefix="/api/v1")
 
