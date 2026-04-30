@@ -5,12 +5,13 @@ from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, Enum, ForeignKey, Numeric, func
+from sqlalchemy import DateTime, Enum, ForeignKey, Numeric
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import BaseModel
 from app.models.enums import PaymentMethod
+from app.shared.models import now_ict
 
 if TYPE_CHECKING:
     from app.models.order import Order
@@ -46,7 +47,7 @@ class Payment(BaseModel):
     )
     paid_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        server_default=func.now(),
+        default=now_ict,
         nullable=False,
     )
 

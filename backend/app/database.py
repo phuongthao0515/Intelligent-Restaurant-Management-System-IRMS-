@@ -5,7 +5,7 @@ from collections.abc import AsyncGenerator
 from datetime import datetime
 
 import structlog
-from sqlalchemy import DateTime, func
+from sqlalchemy import DateTime
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import (
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from app.config import get_settings
+from app.shared.models import now_ict
 
 logger = structlog.get_logger(__name__)
 settings = get_settings()
@@ -25,12 +26,12 @@ class BaseModel(DeclarativeBase):
         PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False
+        DateTime(timezone=True), default=now_ict, nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
+        default=now_ict,
+        onupdate=now_ict,
         nullable=False,
     )
 
