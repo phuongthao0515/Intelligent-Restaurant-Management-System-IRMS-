@@ -53,6 +53,17 @@ export default function DishCard({ dish, menuItems = {} }) {
         </div>
       )}
 
+      {dish.customizations && Object.keys(dish.customizations).length > 0 && (
+        <div className="dish-notes">
+          📝 NOTES:
+          <ul className="dish-notes-list">
+            {Object.entries(dish.customizations).map(([key, note]) => (
+              <li key={key}>{String(note)}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       <div className="dish-meta">
         Table {dish.table_number} | Order #{dish.order_id?.slice(0, 6) || "?"}
       </div>
