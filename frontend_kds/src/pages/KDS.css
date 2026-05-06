@@ -71,6 +71,7 @@
 /* dish card */
 .dish-card {
   min-width: 200px;
+  max-width: 280px;
   background: #fff;
   border: 2px solid #e0e0e0;
   border-radius: 8px;
@@ -78,7 +79,8 @@
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  height: 160px;
+  min-height: 180px;
+  align-self: stretch;
 }
 
 .dish-name {
@@ -86,10 +88,10 @@
   font-size: 14px;
   margin-bottom: 6px;
   word-wrap: break-word;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow-wrap: anywhere;
   line-height: 1.3;
-  flex-shrink: 0;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .dish-meta {
@@ -239,4 +241,22 @@
   background: #fee2e2;
   color: #991b1b;
   border-left: 3px solid #dc2626;
+}
+
+.dish-notes {
+  background: #e0f2fe;
+  color: #075985;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  word-wrap: break-word;
+  border-left: 3px solid #0284c7;
+}
+
+.dish-notes-list {
+  margin: 4px 0 0 16px;
+  padding: 0;
+  font-weight: 500;
 }

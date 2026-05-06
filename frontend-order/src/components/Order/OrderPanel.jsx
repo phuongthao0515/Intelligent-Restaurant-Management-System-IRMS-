@@ -140,7 +140,7 @@ function OrderPanel({
           if (note.trim() !== "") acc[String(idx)] = note;
           return acc;
         }, {}),
-        allergy_notes: i === 0 ? (allergyNote || null) : null,
+        allergy_notes: allergyNote || null,
       })),
     };
 
