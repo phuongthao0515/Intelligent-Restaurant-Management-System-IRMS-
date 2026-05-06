@@ -15,6 +15,7 @@ from app.shared.models import (
     Order,
     OrderEvent,
     OrderItem,
+    OrderStatus,
     RecallOrderRequest,
     Station,
     StationCreate,
@@ -51,6 +52,11 @@ class KdsService:
         for order in orders:
             if order.placed_at is None:
                 continue
+            if order.status == OrderStatus.CANCELLED:
+                continue
+            order_allergies = [
+                item.allergy_notes for item in order.items if item.allergy_notes]
+            order_allergy = (";, ".join(dict.fromkeys(allergy for notes in order_allergies for allergy in notes)) if order_allergies else None)
             items = [item for item in order.items if item.station_id == station_id]
             if status_filter == "ACTIVE":
                 items = [
