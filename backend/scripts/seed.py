@@ -30,8 +30,8 @@ CATEGORY_DATA: list[tuple[str, int]] = [
 STATION_DATA: list[tuple[str, bool]] = [
     ("GRILL", True),
     ("COLD", True),
-    ("KITCHEN", True),
     ("BAR", True),
+    ("FRYER", True),
 ]
 
 STAFF_DATA: list[tuple[str, str, StaffRole]] = [
@@ -60,15 +60,15 @@ CUSTOMER_DATA: list[tuple[str, str]] = [
 
 # (name, category_name, description, price, station_name, is_combo, prep_time_min)
 MENU_DATA: list[tuple[str, str, str, Decimal, str, bool, int]] = [
-    ("Caesar Salad", "APPETIZER", "Romaine, parmesan, croutons", Decimal("8.00"), "COLD", False, 5),
-    ("Bruschetta", "APPETIZER", "Toasted bread, tomato, basil", Decimal("7.00"), "COLD", False, 5),
-    ("Chicken Wings", "APPETIZER", "Smoked, buffalo glaze", Decimal("10.00"), "GRILL", False, 15),
-    ("French Fries", "APPETIZER", "Crispy skin-on fries", Decimal("5.00"), "KITCHEN", False, 10),
-    ("Ribeye Steak", "MAIN", "12oz prime ribeye, garlic butter", Decimal("32.00"), "GRILL", False, 20),
-    ("Grilled Salmon", "MAIN", "Atlantic salmon, lemon herb", Decimal("26.00"), "GRILL", False, 18),
-    ("Margherita Pizza", "MAIN", "San Marzano, mozzarella, basil", Decimal("18.00"), "KITCHEN", False, 15),
-    ("Beef Burger", "MAIN", "Angus patty, cheddar, brioche", Decimal("16.00"), "GRILL", False, 12),
-    ("Steak & Wine Combo", "MAIN", "Ribeye + house red pairing", Decimal("42.00"), "GRILL", True, 25),
+    ("Caesar Salad", "APPETIZER", "Romaine, parmesan, croutons", Decimal("8.00"), "COLD", False, 2),
+    ("Bruschetta", "APPETIZER", "Toasted bread, tomato, basil", Decimal("7.00"), "COLD", False, 2),
+    ("Chicken Wings", "APPETIZER", "Smoked, buffalo glaze", Decimal("10.00"), "GRILL", False, 3),
+    ("French Fries", "APPETIZER", "Crispy skin-on fries", Decimal("5.00"), "FRYER", False, 2),
+    ("Ribeye Steak", "MAIN", "12oz prime ribeye, garlic butter", Decimal("32.00"), "GRILL", False, 10),
+    ("Grilled Salmon", "MAIN", "Atlantic salmon, lemon herb", Decimal("26.00"), "GRILL", False, 10),
+    ("Margherita Pizza", "MAIN", "San Marzano, mozzarella, basil", Decimal("18.00"), "GRILL", False, 5),
+    ("Beef Burger", "MAIN", "Angus patty, cheddar, brioche", Decimal("16.00"), "GRILL", False, 2),
+    ("Steak & Wine Combo", "MAIN", "Ribeye + house red pairing", Decimal("42.00"), "GRILL", True, 5),
     ("Tiramisu", "DESSERT", "Classic Italian, mascarpone", Decimal("9.00"), "COLD", False, 3),
     ("Mojito", "BEVERAGE", "White rum, lime, mint", Decimal("11.00"), "BAR", False, 4),
     ("House Red", "BEVERAGE", "Glass of house red wine", Decimal("12.00"), "BAR", False, 2),
